@@ -1,4 +1,4 @@
-'''
+"""
 Includes:
 * Function to compute the IoU similarity for axis-aligned, rectangular, 2D bounding boxes
 * Function for coordinate conversion for axis-aligned, rectangular, 2D bounding boxes
@@ -16,13 +16,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
 
 def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
-    '''
+    """
     Convert coordinates for axis-aligned 2D boxes between two coordinate formats.
 
     Creates a copy of `tensor`, i.e. does not operate in place. Currently there are
@@ -48,7 +48,7 @@ def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
         A Numpy nD array, a copy of the input tensor with the converted coordinates
         in place of the original coordinates and the unaltered elements of the original
         tensor elsewhere.
-    '''
+    """
     if border_pixels == 'half':
         d = 0
     elif border_pixels == 'include':
@@ -87,7 +87,7 @@ def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
     return tensor1
 
 def convert_coordinates2(tensor, start_index, conversion):
-    '''
+    """
     A matrix multiplication implementation of `convert_coordinates()`.
     Supports only conversion between the 'centroids' and 'minmax' formats.
 
@@ -96,7 +96,7 @@ def convert_coordinates2(tensor, start_index, conversion):
     because the two matrices are sparse).
 
     For details please refer to the documentation of `convert_coordinates()`.
-    '''
+    """
     ind = start_index
     tensor1 = np.copy(tensor).astype(np.float)
     if conversion == 'minmax2centroids':
@@ -117,7 +117,7 @@ def convert_coordinates2(tensor, start_index, conversion):
     return tensor1
 
 def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels='half'):
-    '''
+    """
     Computes the intersection areas of two sets of axis-aligned 2D rectangular boxes.
 
     Let `boxes1` and `boxes2` contain `m` and `n` boxes, respectively.
@@ -152,7 +152,7 @@ def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', 
     Returns:
         A 1D or 2D Numpy array (refer to the `mode` argument for details) of dtype float containing values with
         the intersection areas of the boxes in `boxes1` and `boxes2`.
-    '''
+    """
 
     # Make sure the boxes have the right shapes.
     if boxes1.ndim > 2: raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(boxes1.ndim))
@@ -224,9 +224,9 @@ def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', 
         return side_lengths[:,0] * side_lengths[:,1]
 
 def intersection_area_(boxes1, boxes2, coords='corners', mode='outer_product', border_pixels='half'):
-    '''
+    """
     The same as 'intersection_area()' but for internal use, i.e. without all the safety checks.
-    '''
+    """
 
     m = boxes1.shape[0] # The number of boxes in `boxes1`
     n = boxes2.shape[0] # The number of boxes in `boxes2`
@@ -281,7 +281,7 @@ def intersection_area_(boxes1, boxes2, coords='corners', mode='outer_product', b
 
 
 def iou(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels='half'):
-    '''
+    """
     Computes the intersection-over-union similarity (also known as Jaccard similarity)
     of two sets of axis-aligned 2D rectangular boxes.
 
@@ -318,7 +318,7 @@ def iou(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels=
         A 1D or 2D Numpy array (refer to the `mode` argument for details) of dtype float containing values in [0,1],
         the Jaccard similarity of the boxes in `boxes1` and `boxes2`. 0 means there is no overlap between two given
         boxes, 1 means their coordinates are identical.
-    '''
+    """
 
     # Make sure the boxes have the right shapes.
     if boxes1.ndim > 2: raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(boxes1.ndim))

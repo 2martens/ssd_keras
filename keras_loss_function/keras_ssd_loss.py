@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 The Keras-compatible loss function for the SSD model. Currently supports TensorFlow only.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,21 +15,22 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import tensorflow as tf
 
+
 class SSDLoss:
-    '''
+    """
     The SSD loss, see https://arxiv.org/abs/1512.02325.
-    '''
+    """
 
     def __init__(self,
                  neg_pos_ratio=3,
                  n_neg_min=0,
                  alpha=1.0):
-        '''
+        """
         Arguments:
             neg_pos_ratio (int, optional): The maximum ratio of negative (i.e. background)
                 to positive ground truth boxes to include in the loss computation.
@@ -45,13 +47,13 @@ class SSDLoss:
                 stands in reasonable proportion to the batch size used for training.
             alpha (float, optional): A factor to weight the localization loss in the
                 computation of the total loss. Defaults to 1.0 following the paper.
-        '''
+        """
         self.neg_pos_ratio = neg_pos_ratio
         self.n_neg_min = n_neg_min
         self.alpha = alpha
 
     def smooth_L1_loss(self, y_true, y_pred):
-        '''
+        """
         Compute smooth L1 loss, see references.
 
         Arguments:
@@ -68,14 +70,14 @@ class SSDLoss:
 
         References:
             https://arxiv.org/abs/1504.08083
-        '''
+        """
         absolute_loss = tf.abs(y_true - y_pred)
         square_loss = 0.5 * (y_true - y_pred)**2
         l1_loss = tf.where(tf.less(absolute_loss, 1.0), square_loss, absolute_loss - 0.5)
         return tf.reduce_sum(l1_loss, axis=-1)
 
     def log_loss(self, y_true, y_pred):
-        '''
+        """
         Compute the softmax log loss.
 
         Arguments:
@@ -88,7 +90,7 @@ class SSDLoss:
         Returns:
             The softmax log loss, a nD-1 Tensorflow tensor. In this context a 2D tensor
             of shape (batch, n_boxes_total).
-        '''
+        """
         # Make sure that `y_pred` doesn't contain any zeros (which would break the log function)
         y_pred = tf.maximum(y_pred, 1e-15)
         # Compute the log loss
@@ -96,7 +98,7 @@ class SSDLoss:
         return log_loss
 
     def compute_loss(self, y_true, y_pred):
-        '''
+        """
         Compute the loss of the SSD model prediction against the ground truth.
 
         Arguments:
@@ -120,7 +122,7 @@ class SSDLoss:
 
         Returns:
             A scalar, the total multitask loss for classification and localization.
-        '''
+        """
         self.neg_pos_ratio = tf.constant(self.neg_pos_ratio)
         self.n_neg_min = tf.constant(self.n_neg_min)
         self.alpha = tf.constant(self.alpha)
@@ -169,7 +171,8 @@ class SSDLoss:
         # or (2) the classification loss for all negative boxes is zero, return zero as the `neg_class_loss`.
         def f1():
             return tf.zeros([batch_size])
-        # Otherwise compute the negative loss.
+
+        # Otherwise compute the negative loss
         def f2():
             # Now we'll identify the top-k (where k == `n_negative_keep`) boxes with the highest confidence loss that
             # belong to the background class in the ground truth data. Note that this doesn't necessarily mean that the model

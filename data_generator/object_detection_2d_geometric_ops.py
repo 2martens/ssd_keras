@@ -1,4 +1,4 @@
-'''
+"""
 Various geometric image transformations for 2D object detection, both deterministic
 and probabilistic.
 
@@ -15,7 +15,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -25,9 +25,9 @@ import random
 from data_generator.object_detection_2d_image_boxes_validation_utils import BoxFilter, ImageValidator
 
 class Resize:
-    '''
+    """
     Resizes images to a specified height and width in pixels.
-    '''
+    """
 
     def __init__(self,
                  height,
@@ -35,7 +35,7 @@ class Resize:
                  interpolation_mode=cv2.INTER_LINEAR,
                  box_filter=None,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             height (int): The desired height of the output images in pixels.
             width (int): The desired width of the output images in pixels.
@@ -49,7 +49,7 @@ class Resize:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         if not (isinstance(box_filter, BoxFilter) or box_filter is None):
             raise ValueError("`box_filter` must be either `None` or a `BoxFilter` object.")
         self.out_height = height
@@ -100,10 +100,10 @@ class Resize:
                 return image, labels
 
 class ResizeRandomInterp:
-    '''
+    """
     Resizes images to a specified height and width in pixels using a radnomly
     selected interpolation mode.
-    '''
+    """
 
     def __init__(self,
                  height,
@@ -115,7 +115,7 @@ class ResizeRandomInterp:
                                       cv2.INTER_LANCZOS4],
                  box_filter=None,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             height (int): The desired height of the output image in pixels.
             width (int): The desired width of the output image in pixels.
@@ -129,7 +129,7 @@ class ResizeRandomInterp:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         if not (isinstance(interpolation_modes, (list, tuple))):
             raise ValueError("`interpolation_mode` must be a list or tuple.")
         self.height = height
@@ -148,13 +148,13 @@ class ResizeRandomInterp:
         return self.resize(image, labels, return_inverter)
 
 class Flip:
-    '''
+    """
     Flips images horizontally or vertically.
-    '''
+    """
     def __init__(self,
                  dim='horizontal',
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             dim (str, optional): Can be either of 'horizontal' and 'vertical'.
                 If 'horizontal', images will be flipped horizontally, i.e. along
@@ -163,7 +163,7 @@ class Flip:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         if not (dim in {'horizontal', 'vertical'}): raise ValueError("`dim` can be one of 'horizontal' and 'vertical'.")
         self.dim = dim
         self.labels_format = labels_format
@@ -195,15 +195,15 @@ class Flip:
                 return image, labels
 
 class RandomFlip:
-    '''
+    """
     Randomly flips images horizontally or vertically. The randomness only refers
     to whether or not the image will be flipped.
-    '''
+    """
     def __init__(self,
                  dim='horizontal',
                  prob=0.5,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             dim (str, optional): Can be either of 'horizontal' and 'vertical'.
                 If 'horizontal', images will be flipped horizontally, i.e. along
@@ -214,7 +214,7 @@ class RandomFlip:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         self.dim = dim
         self.prob = prob
         self.labels_format = labels_format
@@ -231,9 +231,9 @@ class RandomFlip:
             return image, labels
 
 class Translate:
-    '''
+    """
     Translates images horizontally and/or vertically.
-    '''
+    """
 
     def __init__(self,
                  dy,
@@ -242,7 +242,7 @@ class Translate:
                  box_filter=None,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             dy (float): The fraction of the image height by which to translate images along the
                 vertical axis. Positive values translate images downwards, negative values
@@ -262,7 +262,7 @@ class Translate:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         if not (isinstance(box_filter, BoxFilter) or box_filter is None):
             raise ValueError("`box_filter` must be either `None` or a `BoxFilter` object.")
@@ -317,9 +317,9 @@ class Translate:
             return image, labels
 
 class RandomTranslate:
-    '''
+    """
     Randomly translates images horizontally and/or vertically.
-    '''
+    """
 
     def __init__(self,
                  dy_minmax=(0.03,0.3),
@@ -331,7 +331,7 @@ class RandomTranslate:
                  n_trials_max=3,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             dy_minmax (list/tuple, optional): A 2-tuple `(min, max)` of non-negative floats that
                 determines the minimum and maximum relative translation of images along the vertical
@@ -365,7 +365,7 @@ class RandomTranslate:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         if dy_minmax[0] > dy_minmax[1]:
             raise ValueError("It must be `dy_minmax[0] <= dy_minmax[1]`.")
         if dx_minmax[0] > dx_minmax[1]:
@@ -447,9 +447,9 @@ class RandomTranslate:
             return image, labels
 
 class Scale:
-    '''
+    """
     Scales images, i.e. zooms in or out.
-    '''
+    """
 
     def __init__(self,
                  factor,
@@ -457,7 +457,7 @@ class Scale:
                  box_filter=None,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             factor (float): The fraction of the image size by which to scale images. Must be positive.
             clip_boxes (bool, optional): Only relevant if ground truth bounding boxes are given.
@@ -472,7 +472,7 @@ class Scale:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         if factor <= 0:
             raise ValueError("It must be `factor > 0`.")
@@ -532,9 +532,9 @@ class Scale:
             return image, labels
 
 class RandomScale:
-    '''
+    """
     Randomly scales images.
-    '''
+    """
 
     def __init__(self,
                  min_factor=0.5,
@@ -546,7 +546,7 @@ class RandomScale:
                  n_trials_max=3,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             min_factor (float, optional): The minimum fraction of the image size by which to scale images.
                 Must be positive.
@@ -572,7 +572,7 @@ class RandomScale:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         if not (0 < min_factor <= max_factor):
             raise ValueError("It must be `0 < min_factor <= max_factor`.")
@@ -657,21 +657,21 @@ class RandomScale:
             return image, labels
 
 class Rotate:
-    '''
+    """
     Rotates images counter-clockwise by 90, 180, or 270 degrees.
-    '''
+    """
 
     def __init__(self,
                  angle,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             angle (int): The angle in degrees by which to rotate the images counter-clockwise.
                 Only 90, 180, and 270 are valid values.
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         if not angle in {90, 180, 270}:
             raise ValueError("`angle` must be in the set {90, 180, 270}.")
@@ -737,15 +737,15 @@ class Rotate:
             return image, labels
 
 class RandomRotate:
-    '''
+    """
     Randomly rotates images counter-clockwise.
-    '''
+    """
 
     def __init__(self,
                  angles=[90, 180, 270],
                  prob=0.5,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             angle (list): The list of angles in degrees from which one is randomly selected to rotate
                 the images counter-clockwise. Only 90, 180, and 270 are valid values.
@@ -754,7 +754,7 @@ class RandomRotate:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         for angle in angles:
             if not angle in {90, 180, 270}:
                 raise ValueError("`angles` can only contain the values 90, 180, and 270.")

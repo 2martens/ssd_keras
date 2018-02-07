@@ -1,4 +1,4 @@
-'''
+"""
 Utilities for 2D object detection related to answering the following questions:
 1. Given an image size and bounding boxes, which bounding boxes meet certain
    requirements with respect to the image size?
@@ -18,7 +18,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -26,10 +26,10 @@ import numpy as np
 from bounding_box_utils.bounding_box_utils import iou
 
 class BoundGenerator:
-    '''
+    """
     Generates pairs of floating point values that represent lower and upper bounds
     from a given sample space.
-    '''
+    """
     def __init__(self,
                  sample_space=((0.1, None),
                                (0.3, None),
@@ -38,14 +38,14 @@ class BoundGenerator:
                                (0.9, None),
                                (None, None)),
                  weights=None):
-        '''
+        """
         Arguments:
             sample_space (list or tuple): A list, tuple, or array-like object of shape
                 `(n, 2)` that contains `n` samples to choose from, where each sample
                 is a 2-tuple of scalars and/or `None` values.
             weights (list or tuple, optional): A list or tuple representing the distribution
                 over the sample space. If `None`, a uniform distribution will be assumed.
-        '''
+        """
 
         if (not (weights is None)) and len(weights) != len(sample_space):
             raise ValueError("`weights` must either be `None` for uniform distribution or have the same length as `sample_space`.")
@@ -69,17 +69,17 @@ class BoundGenerator:
             self.weights = weights
 
     def __call__(self):
-        '''
+        """
         Returns:
             An item of the sample space, i.e. a 2-tuple of scalars.
-        '''
+        """
         i = np.random.choice(self.sample_space_size, p=self.weights)
         return self.sample_space[i]
 
 class BoxFilter:
-    '''
+    """
     Returns all bounding boxes that are valid with respect to a the defined criteria.
-    '''
+    """
 
     def __init__(self,
                  check_overlap=True,
@@ -90,7 +90,7 @@ class BoxFilter:
                  min_area=16,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4},
                  border_pixels='half'):
-        '''
+        """
         Arguments:
             check_overlap (bool, optional): Whether or not to enforce the overlap requirements defined by
                 `overlap_criterion` and `overlap_bounds`. Sometimes you might want to use the box filter only
@@ -128,7 +128,7 @@ class BoxFilter:
                 to the boxes. If 'exclude', the border pixels do not belong to the boxes.
                 If 'half', then one of each of the two horizontal and vertical borders belong
                 to the boxex, but not the other.
-        '''
+        """
         if not isinstance(overlap_bounds, (list, tuple, BoundGenerator)):
             raise ValueError("`overlap_bounds` must be either a 2-tuple of scalars or a `BoundGenerator` object.")
         if isinstance(overlap_bounds, (list, tuple)) and (overlap_bounds[0] > overlap_bounds[1]):
@@ -148,7 +148,7 @@ class BoxFilter:
                  labels,
                  image_height=None,
                  image_width=None):
-        '''
+        """
         Arguments:
             labels (array): The labels to be filtered. This is an array with shape `(m,n)`, where
                 `m` is the number of bounding boxes and `n` is the number of elements that defines
@@ -161,7 +161,7 @@ class BoxFilter:
 
         Returns:
             An array containing the labels of all boxes that are valid.
-        '''
+        """
 
         labels = np.copy(labels)
 
@@ -232,10 +232,10 @@ class BoxFilter:
         return labels[requirements_met]
 
 class ImageValidator:
-    '''
+    """
     Returns `True` if a given minimum number of bounding boxes meets given overlap
     requirements with an image of a given height and width.
-    '''
+    """
 
     def __init__(self,
                  overlap_criterion='center_point',
@@ -243,7 +243,7 @@ class ImageValidator:
                  n_boxes_min=1,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4},
                  border_pixels='half'):
-        '''
+        """
         Arguments:
             overlap_criterion (str, optional): Can be either of 'center_point', 'iou', or 'area'. Determines
                 which boxes are considered valid with respect to a given image. If set to 'center_point',
@@ -267,7 +267,7 @@ class ImageValidator:
                 to the boxes. If 'exclude', the border pixels do not belong to the boxes.
                 If 'half', then one of each of the two horizontal and vertical borders belong
                 to the boxex, but not the other.
-        '''
+        """
         if not ((isinstance(n_boxes_min, int) and n_boxes_min > 0) or n_boxes_min == 'all'):
             raise ValueError("`n_boxes_min` must be a positive integer or 'all'.")
         self.overlap_criterion = overlap_criterion
@@ -287,7 +287,7 @@ class ImageValidator:
                  labels,
                  image_height,
                  image_width):
-        '''
+        """
         Arguments:
             labels (array): The labels to be tested. The box coordinates are expected
                 to be in the image's coordinate system.
@@ -297,7 +297,7 @@ class ImageValidator:
         Returns:
             A boolean indicating whether an imgae of the given height and width is
             valid with respect to the given bounding boxes.
-        '''
+        """
 
         self.box_filter.overlap_bounds = self.bounds
         self.box_filter.labels_format = self.labels_format

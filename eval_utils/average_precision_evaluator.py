@@ -1,4 +1,4 @@
-'''
+"""
 An evaluator to compute the Pascal VOC-style mean average precision (both the pre-2010
 and post-2010 algorithm versions) of a given Keras SSD model on a given dataset.
 
@@ -15,7 +15,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -34,7 +34,7 @@ from data_generator.object_detection_2d_misc_utils import apply_inverse_transfor
 from bounding_box_utils.bounding_box_utils import iou
 
 class Evaluator:
-    '''
+    """
     Computes the mean average precision of the given Keras SSD model on the given dataset.
 
     Can compute the Pascal-VOC-style average precision in both the pre-2010 (k-point sampling)
@@ -44,7 +44,7 @@ class Evaluator:
 
     The algorithm is identical to the official Pascal VOC pre-2010 detection evaluation algorithm
     in its default settings, but can be cusomized in a number of ways.
-    '''
+    """
 
     def __init__(self,
                  model,
@@ -53,7 +53,7 @@ class Evaluator:
                  model_mode='inference',
                  pred_format={'class_id': 0, 'conf': 1, 'xmin': 2, 'ymin': 3, 'xmax': 4, 'ymax': 5},
                  gt_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             model (Keras model): A Keras SSD model object.
             n_classes (int): The number of positive classes, e.g. 20 for Pascal VOC, 80 for MS COCO.
@@ -66,7 +66,7 @@ class Evaluator:
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis.
             gt_format (list, optional): A dictionary that defines which index of a ground truth bounding box contains which of the five
                 items class ID, xmin, ymin, xmax, ymax. The expected strings are 'xmin', 'ymin', 'xmax', 'ymax', 'class_id'.
-        '''
+        """
 
         if not isinstance(data_generator, DataGenerator):
             warnings.warn("`data_generator` is not a `DataGenerator` object, which will cause undefined behavior.")
@@ -112,7 +112,7 @@ class Evaluator:
                  decoding_top_k=200,
                  decoding_pred_coords='centroids',
                  decoding_normalize_coords=True):
-        '''
+        """
         Computes the mean average precision of the given Keras SSD model on the given dataset.
 
         Optionally also returns the averages precisions, precisions, and recalls.
@@ -180,7 +180,7 @@ class Evaluator:
 
         Returns:
             A float, the mean average precision, plus any optional returns specified in the arguments.
-        '''
+        """
 
         #############################################################################################
         # Predict on the entire dataset.
@@ -269,7 +269,7 @@ class Evaluator:
                            round_confidences=False,
                            verbose=True,
                            ret=False):
-        '''
+        """
         Runs predictions for the given model over the entire dataset given by `data_generator`.
 
         Arguments:
@@ -303,7 +303,7 @@ class Evaluator:
 
         Returns:
             None by default. Optionally, a nested list containing the predictions for each class.
-        '''
+        """
 
         class_id_pred = self.pred_format['class_id']
         conf_pred     = self.pred_format['conf']
@@ -427,7 +427,7 @@ class Evaluator:
                                  classes=None,
                                  out_file_prefix='comp3_det_test_',
                                  verbose=True):
-        '''
+        """
         Writes the predictions for all classes to separate text files according to the Pascal VOC results format.
 
         Arguments:
@@ -443,7 +443,7 @@ class Evaluator:
 
         Returns:
             None.
-        '''
+        """
 
         if self.prediction_results is None:
             raise ValueError("There are no prediction results. You must run `predict_on_dataset()` before calling this method.")
@@ -478,7 +478,7 @@ class Evaluator:
                              ignore_neutral_boxes=True,
                              verbose=True,
                              ret=False):
-        '''
+        """
         Counts the number of ground truth boxes for each class across the dataset.
 
         Arguments:
@@ -492,7 +492,7 @@ class Evaluator:
         Returns:
             None by default. Optionally, a list containing a count of the number of ground truth boxes for each class across the
             entire dataset.
-        '''
+        """
 
         if self.data_generator.labels is None:
             raise ValueError("Computing the number of ground truth boxes per class not possible, no ground truth given.")
@@ -542,7 +542,7 @@ class Evaluator:
                           sorting_algorithm='quicksort',
                           verbose=True,
                           ret=False):
-        '''
+        """
         Matches predictions to ground truth boxes.
 
         Note that `predict_on_dataset()` must be called before calling this method.
@@ -572,7 +572,7 @@ class Evaluator:
         Returns:
             None by default. Optionally, four nested lists containing the true positives, false positives, cumulative true positives,
             and cumulative false positives for each class.
-        '''
+        """
 
         if self.data_generator.labels is None:
             raise ValueError("Matching predictions to ground truth boxes not possible, no ground truth given.")
@@ -736,7 +736,7 @@ class Evaluator:
             return true_positives, false_positives, cumulative_true_positives, cumulative_false_positives
 
     def compute_precision_recall(self, verbose=True, ret=False):
-        '''
+        """
         Computes the precisions and recalls for all classes.
 
         Note that `match_predictions()` must be called before calling this method.
@@ -747,7 +747,7 @@ class Evaluator:
 
         Returns:
             None by default. Optionally, two nested lists containing the cumulative precisions and recalls for each class.
-        '''
+        """
 
         if (self.cumulative_true_positives is None) or (self.cumulative_false_positives is None):
             raise ValueError("True and false positives not available. You must run `match_predictions()` before you call this method.")
@@ -781,7 +781,7 @@ class Evaluator:
             return cumulative_precisions, cumulative_recalls
 
     def compute_average_precisions(self, mode='sample', num_recall_points=11, verbose=True, ret=False):
-        '''
+        """
         Computes the average precision for each class.
 
         Can compute the Pascal-VOC-style average precision in both the pre-2010 (k-point sampling)
@@ -807,7 +807,7 @@ class Evaluator:
 
         References:
             http://host.robots.ox.ac.uk/pascal/VOC/voc2012/htmldoc/devkit_doc.html#sec:ap
-        '''
+        """
 
         if (self.cumulative_precisions is None) or (self.cumulative_recalls is None):
             raise ValueError("Precisions and recalls not available. You must run `compute_precision_recall()` before you call this method.")
@@ -884,7 +884,7 @@ class Evaluator:
             return average_precisions
 
     def compute_mean_average_precision(self, ret=True):
-        '''
+        """
         Computes the mean average precision over all classes.
 
         Note that `compute_average_precisions()` must be called before calling this method.
@@ -894,7 +894,7 @@ class Evaluator:
 
         Returns:
             A float, the mean average precision, by default. Optionally, None.
-        '''
+        """
 
         if self.average_precisions is None:
             raise ValueError("Average precisions not available. You must run `compute_average_precisions()` before you call this method.")

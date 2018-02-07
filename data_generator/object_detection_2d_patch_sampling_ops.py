@@ -1,4 +1,4 @@
-'''
+"""
 Various patch sampling operations for data augmentation in 2D object detection.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,7 +14,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -22,9 +22,9 @@ import numpy as np
 from data_generator.object_detection_2d_image_boxes_validation_utils import BoundGenerator, BoxFilter, ImageValidator
 
 class PatchCoordinateGenerator:
-    '''
+    """
     Generates random patch coordinates that meet specified requirements.
-    '''
+    """
 
     def __init__(self,
                  img_height=None,
@@ -40,7 +40,7 @@ class PatchCoordinateGenerator:
                  patch_height=None,
                  patch_width=None,
                  patch_aspect_ratio=None):
-        '''
+        """
         Arguments:
             img_height (int): The height of the image for which the patch coordinates
                 shall be generated. Doesn't have to be known upon construction.
@@ -90,7 +90,7 @@ class PatchCoordinateGenerator:
             patch_width (int, optional): `None` or the fixed width of the generated patches.
             patch_aspect_ratio (float, optional): `None` or the fixed aspect ratio of the
                 generated patches.
-        '''
+        """
 
         if not (must_match in {'h_w', 'h_ar', 'w_ar'}):
             raise ValueError("`must_match` must be either of 'h_w', 'h_ar' and 'w_ar'.")
@@ -115,11 +115,11 @@ class PatchCoordinateGenerator:
         self.patch_aspect_ratio = patch_aspect_ratio
 
     def __call__(self):
-        '''
+        """
         Returns:
             A 4-tuple `(ymin, xmin, height, width)` that represents the coordinates
             of the generated patch.
-        '''
+        """
 
         # Get the patch height and width.
 
@@ -197,7 +197,7 @@ class PatchCoordinateGenerator:
         return (patch_ymin, patch_xmin, patch_height, patch_width)
 
 class CropPad:
-    '''
+    """
     Crops and/or pads an image deterministically.
 
     Depending on the given output patch size and the position (top left corner) relative
@@ -211,7 +211,7 @@ class CropPad:
 
     The output patch can be arbitrary in both size and position as long as it overlaps
     with the input image.
-    '''
+    """
 
     def __init__(self,
                  patch_ymin,
@@ -222,7 +222,7 @@ class CropPad:
                  box_filter=None,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             patch_ymin (int, optional): The vertical coordinate of the top left corner of the output
                 patch relative to the image coordinate system. Can be negative (i.e. lie outside the image)
@@ -247,7 +247,7 @@ class CropPad:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         #if (patch_height <= 0) or (patch_width <= 0):
         #    raise ValueError("Patch height and width must both be positive.")
         #if (patch_ymin + patch_height < 0) or (patch_xmin + patch_width < 0):
@@ -348,11 +348,11 @@ class CropPad:
                 return image
 
 class Crop:
-    '''
+    """
     Crops off the specified numbers of pixels from the borders of images.
 
     This is just a convenience interface for `CropPad`.
-    '''
+    """
 
     def __init__(self,
                  crop_top,
@@ -388,11 +388,11 @@ class Crop:
         return self.crop(image, labels, return_inverter)
 
 class Pad:
-    '''
+    """
     Pads images by the specified numbers of pixels on each side.
 
     This is just a convenience interface for `CropPad`.
-    '''
+    """
 
     def __init__(self,
                  pad_top,
@@ -427,7 +427,7 @@ class Pad:
         return self.pad(image, labels, return_inverter)
 
 class RandomPatch:
-    '''
+    """
     Randomly samples a patch from an image. The randomness refers to whatever
     randomness may be introduced by the patch coordinate generator, the box filter,
     and the patch validator.
@@ -441,7 +441,7 @@ class RandomPatch:
     the caller needs to be able to rely on the output image satisfying the set size or
     aspect ratio. It might therefore not be an option to return the unaltered input image
     as other random transforms do when they fail to produce a valid transformed image.
-    '''
+    """
 
     def __init__(self,
                  patch_coord_generator,
@@ -453,7 +453,7 @@ class RandomPatch:
                  background=(0,0,0),
                  can_fail=False,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             patch_coord_generator (PatchCoordinateGenerator): A `PatchCoordinateGenerator` object
                 to generate the positions and sizes of the patches to be sampled from the input images.
@@ -480,7 +480,7 @@ class RandomPatch:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
         if not isinstance(patch_coord_generator, PatchCoordinateGenerator):
             raise ValueError("`patch_coord_generator` must be an instance of `PatchCoordinateGenerator`.")
         if not (isinstance(image_validator, ImageValidator) or image_validator is None):
@@ -589,7 +589,7 @@ class RandomPatch:
                     return image, labels
 
 class RandomPatchInf:
-    '''
+    """
     Randomly samples a patch from an image. The randomness refers to whatever
     randomness may be introduced by the patch coordinate generator, the box filter,
     and the patch validator.
@@ -602,7 +602,7 @@ class RandomPatchInf:
        the input image is returned unaltered, i.e. it cannot fail.
     2. If a bound generator is given, a new pair of bounds will be generated
        every `n_trials_max` iterations.
-    '''
+    """
 
     def __init__(self,
                  patch_coord_generator,
@@ -614,7 +614,7 @@ class RandomPatchInf:
                  prob=0.857,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             patch_coord_generator (PatchCoordinateGenerator): A `PatchCoordinateGenerator` object
                 to generate the positions and sizes of the patches to be sampled from the input images.
@@ -644,7 +644,7 @@ class RandomPatchInf:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         if not isinstance(patch_coord_generator, PatchCoordinateGenerator):
             raise ValueError("`patch_coord_generator` must be an instance of `PatchCoordinateGenerator`.")
@@ -742,13 +742,13 @@ class RandomPatchInf:
                         return image, labels
 
 class RandomMaxCropFixedAR:
-    '''
+    """
     Crops the largest possible patch of a given fixed aspect ratio
     from an image.
 
     Since the aspect ratio of the sampled patches is constant, they
     can subsequently be resized to the same size without distortion.
-    '''
+    """
 
     def __init__(self,
                  patch_aspect_ratio,
@@ -757,7 +757,7 @@ class RandomMaxCropFixedAR:
                  n_trials_max=3,
                  clip_boxes=True,
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             patch_aspect_ratio (float): The fixed aspect ratio that all sampled patches will have.
             box_filter (BoxFilter, optional): Only relevant if ground truth bounding boxes are given.
@@ -776,7 +776,7 @@ class RandomMaxCropFixedAR:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         self.patch_aspect_ratio = patch_aspect_ratio
         self.box_filter = box_filter
@@ -821,19 +821,19 @@ class RandomMaxCropFixedAR:
         return self.random_patch(image, labels, return_inverter)
 
 class RandomPadFixedAR:
-    '''
+    """
     Adds the minimal possible padding to an image that results in a patch
     of the given fixed aspect ratio that contains the entire image.
 
     Since the aspect ratio of the resulting images is constant, they
     can subsequently be resized to the same size without distortion.
-    '''
+    """
 
     def __init__(self,
                  patch_aspect_ratio,
                  background=(0,0,0),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             patch_aspect_ratio (float): The fixed aspect ratio that all sampled patches will have.
             background (list/tuple, optional): A 3-tuple specifying the RGB color value of the potential
@@ -842,7 +842,7 @@ class RandomPadFixedAR:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         self.patch_aspect_ratio = patch_aspect_ratio
         self.background = background

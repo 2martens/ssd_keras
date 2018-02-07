@@ -1,4 +1,4 @@
-'''
+"""
 Miscellaneous data generator utilities.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,13 +14,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
 
 def apply_inverse_transforms(y_pred_decoded, inverse_transforms):
-    '''
+    """
     Takes a list or Numpy array of decoded predictions and applies a given list of
     transforms to them. The list of inverse transforms would usually contain the
     inverter functions that some of the image transformations that come with this
@@ -44,7 +44,7 @@ def apply_inverse_transforms(y_pred_decoded, inverse_transforms):
 
     Returns:
         The transformed predictions, which have the same structure as `y_pred_decoded`.
-    '''
+    """
 
     if isinstance(y_pred_decoded, list):
 

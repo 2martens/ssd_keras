@@ -1,4 +1,4 @@
-'''
+"""
 A data generator for 2D object detection.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,7 +14,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -50,21 +50,21 @@ from ssd_encoder_decoder.ssd_input_encoder import SSDInputEncoder
 from data_generator.object_detection_2d_image_boxes_validation_utils import BoxFilter
 
 class DegenerateBatchError(Exception):
-    '''
+    """
     An exception class to be raised if a generated batch ends up being degenerate,
     e.g. if a generated batch is empty.
-    '''
+    """
     pass
 
 class DatasetError(Exception):
-    '''
+    """
     An exception class to be raised if a anything is wrong with the dataset,
     in particular if you try to generate batches when no dataset was loaded.
-    '''
+    """
     pass
 
 class DataGenerator:
-    '''
+    """
     A generator to generate batches of samples and corresponding labels indefinitely.
 
     Can shuffle the dataset consistently after each complete pass.
@@ -76,7 +76,7 @@ class DataGenerator:
 
     Can perform image transformations for data conversion and data augmentation,
     for details please refer to the documentation of the `generate()` method.
-    '''
+    """
 
     def __init__(self,
                  load_images_into_memory=False,
@@ -89,7 +89,7 @@ class DataGenerator:
                  eval_neutral=None,
                  labels_output_format=('class_id', 'xmin', 'ymin', 'xmax', 'ymax'),
                  verbose=True):
-        '''
+        """
         Initializes the data generator. You can either load a dataset directly here in the constructor,
         e.g. an HDF5 dataset, or you can use one of the parser methods to read in a dataset.
 
@@ -134,7 +134,7 @@ class DataGenerator:
                 strings are 'xmin', 'ymin', 'xmax', 'ymax', 'class_id'.
             verbose (bool, optional): If `True`, prints out the progress for some constructor operations that may
                 take a bit longer.
-        '''
+        """
         self.labels_output_format = labels_output_format
         self.labels_format={'class_id': labels_output_format.index('class_id'),
                             'xmin': labels_output_format.index('xmin'),
@@ -216,7 +216,7 @@ class DataGenerator:
             self.hdf5_dataset = None
 
     def load_hdf5_dataset(self, verbose=True):
-        '''
+        """
         Loads an HDF5 dataset that is in the format that the `create_hdf5_dataset()` method
         produces.
 
@@ -226,7 +226,7 @@ class DataGenerator:
 
         Returns:
             None.
-        '''
+        """
 
         self.hdf5_dataset = h5py.File(self.hdf5_dataset_path, 'r')
         self.dataset_size = len(self.hdf5_dataset['images'])
@@ -272,7 +272,7 @@ class DataGenerator:
                   random_sample=False,
                   ret=False,
                   verbose=True):
-        '''
+        """
         Arguments:
             images_dir (str): The path to the directory that contains the images.
             labels_filename (str): The filepath to a CSV file that contains one ground truth bounding box per line
@@ -301,7 +301,7 @@ class DataGenerator:
 
         Returns:
             None by default, optionally lists for whichever are available of images, image filenames, labels, and image IDs.
-        '''
+        """
 
         # Set class members.
         self.images_dir = images_dir
@@ -412,7 +412,7 @@ class DataGenerator:
                   exclude_difficult=False,
                   ret=False,
                   verbose=True):
-        '''
+        """
         This is an XML parser for the Pascal VOC datasets. It might be applicable to other datasets with minor changes to
         the code, but in its current form it expects the data format and XML tags of the Pascal VOC datasets.
 
@@ -442,7 +442,7 @@ class DataGenerator:
         Returns:
             None by default, optionally lists for whichever are available of images, image filenames, labels, image IDs,
             and a list indicating which boxes are annotated with the label "difficult".
-        '''
+        """
         # Set class members.
         self.images_dirs = images_dirs
         self.annotations_dirs = annotations_dirs
@@ -546,7 +546,7 @@ class DataGenerator:
                    include_classes='all',
                    ret=False,
                    verbose=True):
-        '''
+        """
         This is an JSON parser for the MS COCO datasets. It might be applicable to other datasets with minor changes to
         the code, but in its current form it expects the JSON format of the MS COCO datasets.
 
@@ -569,7 +569,7 @@ class DataGenerator:
 
         Returns:
             None by default, optionally lists for whichever are available of images, image filenames, labels and image IDs.
-        '''
+        """
         self.images_dirs = images_dirs
         self.annotations_filenames = annotations_filenames
         self.include_classes = include_classes
@@ -669,7 +669,7 @@ class DataGenerator:
                             resize=False,
                             variable_image_size=True,
                             verbose=True):
-        '''
+        """
         Converts the currently loaded dataset into a HDF5 file. This HDF5 file contains all
         images as uncompressed arrays in a contiguous block of memory, which allows for them
         to be loaded faster. Such an uncompressed dataset, however, may take up considerably
@@ -700,7 +700,7 @@ class DataGenerator:
 
         Returns:
             None.
-        '''
+        """
 
         self.hdf5_dataset_path = file_path
 
@@ -835,7 +835,7 @@ class DataGenerator:
                  returns={'processed_images', 'encoded_labels'},
                  keep_images_without_gt=False,
                  degenerate_box_handling='remove'):
-        '''
+        """
         Generates batches of samples and (optionally) corresponding labels indefinitely.
 
         Can shuffle the samples consistently after each complete pass.
@@ -904,7 +904,7 @@ class DataGenerator:
 
         Yields:
             The next batch as a tuple of items as defined by the `returns` argument.
-        '''
+        """
 
         if self.dataset_size == 0:
             raise DatasetError("Cannot generate batches because you did not load a dataset.")
@@ -1178,7 +1178,7 @@ class DataGenerator:
                      labels_path=None,
                      image_ids_path=None,
                      eval_neutral_path=None):
-        '''
+        """
         Writes the current `filenames`, `labels`, and `image_ids` lists to the specified files.
         This is particularly useful for large datasets with annotations that are
         parsed from XML files, which can take quite long. If you'll be using the
@@ -1191,7 +1191,7 @@ class DataGenerator:
             image_ids_path (str, optional): The path under which to save the image IDs pickle.
             eval_neutral_path (str, optional): The path under which to save the pickle for
                 the evaluation-neutrality annotations.
-        '''
+        """
         with open(filenames_path, 'wb') as f:
             pickle.dump(self.filenames, f)
         if not labels_path is None:
@@ -1205,16 +1205,16 @@ class DataGenerator:
                 pickle.dump(self.eval_neutral, f)
 
     def get_dataset(self):
-        '''
+        """
         Returns:
             4-tuple containing lists and/or `None` for the filenames, labels, image IDs,
             and evaluation-neutrality annotations.
-        '''
+        """
         return self.filenames, self.labels, self.image_ids, self.eval_neutral
 
     def get_dataset_size(self):
-        '''
+        """
         Returns:
             The number of images in the dataset.
-        '''
+        """
         return self.dataset_size

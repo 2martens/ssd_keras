@@ -1,4 +1,4 @@
-'''
+"""
 Utilities to match ground truth boxes to anchor boxes.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,13 +14,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
 
 def match_bipartite_greedy(weight_matrix):
-    '''
+    """
     Returns a bipartite matching according to the given weight matrix.
 
     The algorithm works as follows:
@@ -48,7 +48,7 @@ def match_bipartite_greedy(weight_matrix):
         A 1D Numpy array of length `weight_matrix.shape[0]` that represents
         the matched index along the second axis of `weight_matrix` for each index
         along the first axis.
-    '''
+    """
 
     weight_matrix = np.copy(weight_matrix) # We'll modify this array.
     num_ground_truth_boxes = weight_matrix.shape[0]
@@ -79,7 +79,7 @@ def match_bipartite_greedy(weight_matrix):
     return matches
 
 def match_multi(weight_matrix, threshold):
-    '''
+    """
     Matches all elements along the second axis of `weight_matrix` to their best
     matches along the first axis subject to the constraint that the weight of a match
     must be greater than or equal to `threshold` in order to produce a match.
@@ -100,7 +100,7 @@ def match_multi(weight_matrix, threshold):
         Two 1D Numpy arrays of equal length that represent the matched indices. The first
         array contains the indices along the first axis of `weight_matrix`, the second array
         contains the indices along the second axis.
-    '''
+    """
 
     num_anchor_boxes = weight_matrix.shape[1]
     all_anchor_indices = list(range(num_anchor_boxes)) # Only relevant for fancy-indexing below.

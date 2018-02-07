@@ -1,4 +1,4 @@
-'''
+"""
 An encoder that converts ground truth annotations to SSD-compatible training targets.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,7 +14,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -23,7 +23,7 @@ from bounding_box_utils.bounding_box_utils import iou, convert_coordinates
 from ssd_encoder_decoder.matching_utils import match_bipartite_greedy, match_multi
 
 class SSDInputEncoder:
-    '''
+    """
     Transforms ground truth labels for object detection in images
     (2D bounding box coordinates and class labels) to the format required for
     training an SSD model.
@@ -31,7 +31,7 @@ class SSDInputEncoder:
     In the process of encoding the ground truth labels, a template of anchor boxes
     is being built, which are subsequently matched to the ground truth boxes
     via an intersection-over-union threshold criterion.
-    '''
+    """
 
     def __init__(self,
                  img_height,
@@ -55,7 +55,7 @@ class SSDInputEncoder:
                  coords='centroids',
                  normalize_coords=True,
                  background_id=0):
-        '''
+        """
         Arguments:
             img_height (int): The height of the input images.
             img_width (int): The width of the input images.
@@ -130,7 +130,7 @@ class SSDInputEncoder:
                 This means instead of using absolute tartget coordinates, the encoder will scale all coordinates to be within [0,1].
                 This way learning becomes independent of the input image size.
             background_id (int, optional): Determines which class ID is for the background class.
-        '''
+        """
         predictor_sizes = np.array(predictor_sizes)
         if predictor_sizes.ndim == 1:
             predictor_sizes = np.expand_dims(predictor_sizes, axis=0)
@@ -275,7 +275,7 @@ class SSDInputEncoder:
             self.centers_diag.append(center)
 
     def __call__(self, ground_truth_labels, diagnostics=False):
-        '''
+        """
         Converts ground truth bounding box data into a suitable format to train an SSD model.
 
         Arguments:
@@ -295,7 +295,7 @@ class SSDInputEncoder:
             model per image, and the classes are one-hot-encoded. The four elements after the class vecotrs in
             the last axis are the box coordinates, the next four elements after that are just dummy elements, and
             the last four elements are the variances.
-        '''
+        """
 
         # Mapping to define which indices represent which coordinates in the ground truth.
         class_id = 0
@@ -425,7 +425,7 @@ class SSDInputEncoder:
                                         this_steps=None,
                                         this_offsets=None,
                                         diagnostics=False):
-        '''
+        """
         Computes an array of the spatial positions and sizes of the anchor boxes for one predictor layer
         of size `feature_map_size == [feature_map_height, feature_map_width]`.
 
@@ -452,7 +452,7 @@ class SSDInputEncoder:
         Returns:
             A 4D Numpy tensor of shape `(feature_map_height, feature_map_width, n_boxes_per_cell, 4)` where the
             last dimension contains `(xmin, xmax, ymin, ymax)` for each anchor box in each cell of the feature map.
-        '''
+        """
         # Compute box width and height for each aspect ratio.
 
         # The shorter side of the image will be used to compute `w` and `h` using `scale` and `aspect_ratios`.
@@ -548,7 +548,7 @@ class SSDInputEncoder:
             return boxes_tensor
 
     def generate_encoding_template(self, batch_size, diagnostics=False):
-        '''
+        """
         Produces an encoding template for the ground truth label tensor for a given batch.
 
         Note that all tensor creation, reshaping and concatenation operations performed in this function
@@ -570,7 +570,7 @@ class SSDInputEncoder:
             the ground truth labels for training. The last axis has length `#classes + 12` because the model
             output contains not only the 4 predicted box coordinate offsets, but also the 4 coordinates for
             the anchor boxes and the 4 variance values.
-        '''
+        """
         # Tile the anchor boxes for each predictor layer across all batch items.
         boxes_batch = []
         for boxes in self.boxes_list:
@@ -611,7 +611,7 @@ class SSDInputEncoder:
             return y_encoding_template
 
 class DegenerateBoxError(Exception):
-    '''
+    """
     An exception class to be raised if degenerate boxes are being detected.
-    '''
+    """
     pass

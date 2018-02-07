@@ -1,4 +1,4 @@
-'''
+"""
 The data augmentation operations of the original SSD implementation.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,7 +14,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -24,12 +24,12 @@ from data_generator.object_detection_2d_geometric_ops import RandomFlip, RandomT
 from data_generator.object_detection_2d_image_boxes_validation_utils import BoundGenerator, BoxFilter, ImageValidator
 
 class DataAugmentationConstantInputSize:
-    '''
+    """
     Applies a chain of photometric and geometric image transformations. For documentation, please refer
     to the documentation of the individual transformations involved.
 
     Important: This augmentation chain is suitable for constant-size images only.
-    '''
+    """
 
     def __init__(self,
                  random_brightness=(-48, 48, 0.5),

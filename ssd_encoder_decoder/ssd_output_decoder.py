@@ -1,4 +1,4 @@
-'''
+"""
 Includes:
 * Functions to decode and filter raw SSD model output. These are only needed if the
   SSD model does not have a `DecodeDetections` layer.
@@ -17,7 +17,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -25,7 +25,7 @@ import numpy as np
 from bounding_box_utils.bounding_box_utils import iou, convert_coordinates
 
 def greedy_nms(y_pred_decoded, iou_threshold=0.45, coords='corners', border_pixels='half'):
-    '''
+    """
     Perform greedy non-maximum suppression on the input boxes.
 
     Greedy NMS works by selecting the box with the highest score and
@@ -57,7 +57,7 @@ def greedy_nms(y_pred_decoded, iou_threshold=0.45, coords='corners', border_pixe
 
     Returns:
         The predictions after removing non-maxima. The format is the same as the input format.
-    '''
+    """
     y_pred_decoded_nms = []
     for batch_item in y_pred_decoded: # For the labels of each batch item...
         boxes_left = np.copy(batch_item)
@@ -75,10 +75,10 @@ def greedy_nms(y_pred_decoded, iou_threshold=0.45, coords='corners', border_pixe
     return y_pred_decoded_nms
 
 def _greedy_nms(predictions, iou_threshold=0.45, coords='corners', border_pixels='half'):
-    '''
+    """
     The same greedy non-maximum suppression algorithm as above, but slightly modified for use as an internal
     function for per-class NMS in `decode_detections()`.
-    '''
+    """
     boxes_left = np.copy(predictions)
     maxima = [] # This is where we store the boxes that make it through the non-maximum suppression
     while boxes_left.shape[0] > 0: # While there are still boxes left to compare...
@@ -92,10 +92,10 @@ def _greedy_nms(predictions, iou_threshold=0.45, coords='corners', border_pixels
     return np.array(maxima)
 
 def _greedy_nms2(predictions, iou_threshold=0.45, coords='corners', border_pixels='half'):
-    '''
+    """
     The same greedy non-maximum suppression algorithm as above, but slightly modified for use as an internal
     function in `decode_detections_fast()`.
-    '''
+    """
     boxes_left = np.copy(predictions)
     maxima = [] # This is where we store the boxes that make it through the non-maximum suppression
     while boxes_left.shape[0] > 0: # While there are still boxes left to compare...
@@ -117,7 +117,7 @@ def decode_detections(y_pred,
                       img_height=None,
                       img_width=None,
                       border_pixels='half'):
-    '''
+    """
     Convert model prediction output back to a format that contains only the positive box predictions
     (i.e. the same format that `SSDInputEncoder` takes as input).
 
@@ -163,7 +163,7 @@ def decode_detections(y_pred,
         A python list of length `batch_size` where each list element represents the predicted boxes
         for one image and contains a Numpy array of shape `(boxes, 6)` where each row is a box prediction for
         a non-background class for the respective image in the format `[class_id, confidence, xmin, ymin, xmax, ymax]`.
-    '''
+    """
     if normalize_coords and ((img_height is None) or (img_width is None)):
         raise ValueError("If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(img_height, img_width))
 
@@ -234,7 +234,7 @@ def decode_detections_fast(y_pred,
                            img_height=None,
                            img_width=None,
                            border_pixels='half'):
-    '''
+    """
     Convert model prediction output back to a format that contains only the positive box predictions
     (i.e. the same format that `enconde_y()` takes as input).
 
@@ -283,7 +283,7 @@ def decode_detections_fast(y_pred,
         A python list of length `batch_size` where each list element represents the predicted boxes
         for one image and contains a Numpy array of shape `(boxes, 6)` where each row is a box prediction for
         a non-background class for the respective image in the format `[class_id, confidence, xmin, xmax, ymin, ymax]`.
-    '''
+    """
     if normalize_coords and ((img_height is None) or (img_width is None)):
         raise ValueError("If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(img_height, img_width))
 
@@ -349,7 +349,7 @@ def decode_detections_debug(y_pred,
                             img_width=None,
                             variance_encoded_in_target=False,
                             border_pixels='half'):
-    '''
+    """
     This decoder performs the same processing as `decode_detections()`, but the output format for each left-over
     predicted box is `[box_id, class_id, confidence, xmin, ymin, xmax, ymax]`.
 
@@ -393,7 +393,7 @@ def decode_detections_debug(y_pred,
         A python list of length `batch_size` where each list element represents the predicted boxes
         for one image and contains a Numpy array of shape `(boxes, 7)` where each row is a box prediction for
         a non-background class for the respective image in the format `[box_id, class_id, confidence, xmin, ymin, xmax, ymax]`.
-    '''
+    """
     if normalize_coords and ((img_height is None) or (img_width is None)):
         raise ValueError("If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(img_height, img_width))
 
@@ -467,12 +467,12 @@ def decode_detections_debug(y_pred,
     return y_pred_decoded
 
 def _greedy_nms_debug(predictions, iou_threshold=0.45, coords='corners', border_pixels='half'):
-    '''
+    """
     The same greedy non-maximum suppression algorithm as above, but slightly modified for use as an internal
     function for per-class NMS in `decode_detections_debug()`. The difference is that it keeps the indices of all
     left-over boxes for each batch item, which allows you to know which predictor layer predicted a given output
     box and is thus useful for debugging.
-    '''
+    """
     boxes_left = np.copy(predictions)
     maxima = [] # This is where we store the boxes that make it through the non-maximum suppression
     while boxes_left.shape[0] > 0: # While there are still boxes left to compare...
@@ -486,12 +486,12 @@ def _greedy_nms_debug(predictions, iou_threshold=0.45, coords='corners', border_
     return np.array(maxima)
 
 def get_num_boxes_per_pred_layer(predictor_sizes, aspect_ratios, two_boxes_for_ar1):
-    '''
+    """
     Returns a list of the number of boxes that each predictor layer predicts.
 
     `aspect_ratios` must be a nested list, containing a list of aspect ratios
     for each predictor layer.
-    '''
+    """
     num_boxes_per_pred_layer = []
     for i in range(len(predictor_sizes)):
         if two_boxes_for_ar1:
@@ -501,7 +501,7 @@ def get_num_boxes_per_pred_layer(predictor_sizes, aspect_ratios, two_boxes_for_a
     return num_boxes_per_pred_layer
 
 def get_pred_layers(y_pred_decoded, num_boxes_per_pred_layer):
-    '''
+    """
     For a given prediction tensor decoded with `decode_detections_debug()`, returns a list
     with the indices of the predictor layers that made each predictions.
 
@@ -514,7 +514,7 @@ def get_pred_layers(y_pred_decoded, num_boxes_per_pred_layer):
             for each predicted box.
         num_boxes_per_pred_layer (list): A list that contains the total number
             of boxes that each predictor layer predicts.
-    '''
+    """
     pred_layers_all = []
     cum_boxes_per_pred_layer = np.cumsum(num_boxes_per_pred_layer)
     for batch_item in y_pred_decoded:

@@ -1,4 +1,4 @@
-'''
+"""
 The data augmentation operations of the original SSD implementation.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -14,7 +14,7 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -27,20 +27,20 @@ from data_generator.object_detection_2d_geometric_ops import ResizeRandomInterp,
 from data_generator.object_detection_2d_image_boxes_validation_utils import BoundGenerator, BoxFilter, ImageValidator
 
 class SSDRandomCrop:
-    '''
+    """
     Performs the same random crops as defined by the `batch_sampler` instructions
     of the original Caffe implementation of SSD. A description of this random cropping
     strategy can also be found in the data augmentation section of the paper:
     https://arxiv.org/abs/1512.02325
-    '''
+    """
 
     def __init__(self, labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         self.labels_format = labels_format
 
@@ -101,22 +101,22 @@ class SSDRandomCrop:
         return self.random_crop(image, labels, return_inverter)
 
 class SSDExpand:
-    '''
+    """
     Performs the random image expansion as defined by the `train_transform_param` instructions
     of the original Caffe implementation of SSD. A description of this expansion strategy
     can also be found in section 3.6 ("Data Augmentation for Small Object Accuracy") of the paper:
     https://arxiv.org/abs/1512.02325
-    '''
+    """
 
     def __init__(self, background=(123, 117, 104), labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             background (list/tuple, optional): A 3-tuple specifying the RGB color value of the
                 background pixels of the translated images.
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         self.labels_format = labels_format
 
@@ -144,10 +144,10 @@ class SSDExpand:
         return self.expand(image, labels, return_inverter)
 
 class SSDPhotometricDistortions:
-    '''
+    """
     Performs the photometric distortions defined by the `train_transform_param` instructions
     of the original Caffe implementation of SSD.
-    '''
+    """
 
     def __init__(self):
 
@@ -206,17 +206,17 @@ class SSDPhotometricDistortions:
             return image, labels
 
 class SSDDataAugmentation:
-    '''
+    """
     Reproduces the data augmentation pipeline used in the training of the original
     Caffe implementation of SSD.
-    '''
+    """
 
     def __init__(self,
                  img_height=300,
                  img_width=300,
                  background=(123, 117, 104),
                  labels_format={'class_id': 0, 'xmin': 1, 'ymin': 2, 'xmax': 3, 'ymax': 4}):
-        '''
+        """
         Arguments:
             height (int): The desired height of the output images in pixels.
             width (int): The desired width of the output images in pixels.
@@ -225,7 +225,7 @@ class SSDDataAugmentation:
             labels_format (dict, optional): A dictionary that defines which index in the last axis of the labels
                 of an image contains which bounding box coordinate. The dictionary maps at least the keywords
                 'xmin', 'ymin', 'xmax', and 'ymax' to their respective indices within last axis of the labels array.
-        '''
+        """
 
         self.labels_format = labels_format
 
