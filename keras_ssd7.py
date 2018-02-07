@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 A small 7-layer Keras model with SSD architecture. Also serves as a template to build arbitrary network architectures.
 
 Copyright (C) 2017 Pierluigi Ferrari
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -23,7 +24,8 @@ from keras.models import Model
 from keras.layers import Input, Lambda, Conv2D, MaxPooling2D, BatchNormalization, ELU, Reshape, Concatenate, Activation
 from keras.regularizers import l2
 
-from keras_layer_AnchorBoxes import AnchorBoxes
+from .keras_layer_AnchorBoxes import AnchorBoxes
+
 
 def build_model(image_size,
                 n_classes,
@@ -44,7 +46,7 @@ def build_model(image_size,
                 divide_by_stddev=None,
                 swap_channels=False,
                 return_predictor_sizes=False):
-    '''
+    """
     Build a Keras model with SSD architecture, see references.
 
     The model consists of convolutional feature layers and a number of convolutional
@@ -156,7 +158,7 @@ def build_model(image_size,
 
     References:
         https://arxiv.org/abs/1512.02325v5
-    '''
+    """
 
     n_predictor_layers = 4 # The number of predictor conv layers in the network
     n_classes += 1 # Account for the background class.

@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 Includes:
 * A batch generator for SSD model training and inference which can perform online data agumentation
 * An offline image processor that saves processed images and adjusted labels to disk
@@ -17,7 +18,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from __future__ import division
 from collections import defaultdict
@@ -51,8 +52,9 @@ except ImportError:
 # - Brightness change
 # - Histogram contrast equalization
 
+
 def _translate(image, horizontal=(0,40), vertical=(0,10)):
-    '''
+    """
     Randomly translate the input image horizontally and vertically.
 
     Arguments:
@@ -64,8 +66,8 @@ def _translate(image, horizontal=(0,40), vertical=(0,10)):
 
     Returns:
         The translated image and the horzontal and vertical shift values.
-    '''
-    rows,cols,ch = image.shape
+    """
+    rows, cols, ch = image.shape
 
     x = np.random.randint(horizontal[0], horizontal[1]+1)
     y = np.random.randint(vertical[0], vertical[1]+1)
@@ -75,70 +77,75 @@ def _translate(image, horizontal=(0,40), vertical=(0,10)):
     M = np.float32([[1,0,x_shift],[0,1,y_shift]])
     return cv2.warpAffine(image, M, (cols, rows)), x_shift, y_shift
 
+
 def _flip(image, orientation='horizontal'):
-    '''
+    """
     Flip the input image horizontally or vertically.
-    '''
+    """
     if orientation == 'horizontal':
         return cv2.flip(image, 1)
     else:
         return cv2.flip(image, 0)
 
+
 def _scale(image, min=0.9, max=1.1):
-    '''
+    """
     Scale the input image by a random factor picked from a uniform distribution
     over [min, max].
 
     Returns:
         The scaled image, the associated warp matrix, and the scaling value.
-    '''
+    """
 
-    rows,cols,ch = image.shape
+    rows, cols, ch = image.shape
 
-    #Randomly select a scaling factor from the range passed.
+    # Randomly select a scaling factor from the range passed.
     scale = np.random.uniform(min, max)
 
     M = cv2.getRotationMatrix2D((cols/2,rows/2), 0, scale)
     return cv2.warpAffine(image, M, (cols, rows)), M, scale
 
+
 def _brightness(image, min=0.5, max=2.0):
-    '''
+    """
     Randomly change the brightness of the input image.
 
     Protected against overflow.
-    '''
-    hsv = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
+    """
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
-    random_br = np.random.uniform(min,max)
+    random_br = np.random.uniform(min, max)
 
-    #To protect against overflow: Calculate a mask for all pixels
-    #where adjustment of the brightness would exceed the maximum
-    #brightness value and set the value to the maximum at those pixels.
-    mask = hsv[:,:,2] * random_br > 255
-    v_channel = np.where(mask, 255, hsv[:,:,2] * random_br)
-    hsv[:,:,2] = v_channel
+    # To protect against overflow: Calculate a mask for all pixels
+    # where adjustment of the brightness would exceed the maximum
+    # brightness value and set the value to the maximum at those pixels.
+    mask = hsv[:, :, 2] * random_br > 255
+    v_channel = np.where(mask, 255, hsv[:, :, 2] * random_br)
+    hsv[:, :, 2] = v_channel
 
-    return cv2.cvtColor(hsv,cv2.COLOR_HSV2RGB)
+    return cv2.cvtColor(hsv, cv2.COLOR_HSV2RGB)
+
 
 def histogram_eq(image):
-    '''
+    """
     Perform histogram equalization on the input image.
 
     See https://en.wikipedia.org/wiki/Histogram_equalization.
-    '''
+    """
 
     image1 = np.copy(image)
 
     image1 = cv2.cvtColor(image1, cv2.COLOR_RGB2HSV)
 
-    image1[:,:,2] = cv2.equalizeHist(image1[:,:,2])
+    image1[:, :, 2] = cv2.equalizeHist(image1[:, :, 2])
 
     image1 = cv2.cvtColor(image1, cv2.COLOR_HSV2RGB)
 
     return image1
 
+
 class BatchGenerator:
-    '''
+    """
     A generator to generate batches of samples and corresponding labels indefinitely.
 
     Can shuffle the dataset consistently after each complete pass.
@@ -150,7 +157,7 @@ class BatchGenerator:
 
     Can perform image transformations for data conversion and data augmentation,
     for details please refer to the documentation of the `generate()` method.
-    '''
+    """
 
     def __init__(self,
                  box_output_format=['class_id', 'xmin', 'ymin', 'xmax', 'ymax'],
@@ -159,7 +166,7 @@ class BatchGenerator:
                  images_dir=None,
                  labels=None,
                  image_ids=None):
-        '''
+        """
         This class provides parser methods that you call separately after calling the constructor to assemble
         the list of image filenames and the list of labels for the dataset from CSV or XML files. If you already
         have the image filenames and labels in asuitable format (see argument descriptions below), you can pass
@@ -200,7 +207,7 @@ class BatchGenerator:
             image_ids (string or list, optional): `None` or either a Python list/tuple or a string representing
                 the path to a pickled file containing a list/tuple. The list/tuple must contain the image
                 IDs of the images in the dataset.
-        '''
+        """
         self.box_output_format = box_output_format
 
         # The variables `self.filenames`, `self.labels`, and `self.image_ids` below store the output from the parsers.
@@ -210,7 +217,7 @@ class BatchGenerator:
         # the respective 2D array has `k` rows, each row containing `(xmin, xmax, ymin, ymax, class_id)` for the respective bounding box.
         # Setting `self.labels` is optional, the generator also works if `self.labels` remains `None`.
 
-        if not filenames is None:
+        if filenames is not None:
             if isinstance(filenames, (list, tuple)):
                 self.filenames = filenames
             elif isinstance(filenames, str):
@@ -226,7 +233,7 @@ class BatchGenerator:
         else:
             self.filenames = []
 
-        if not labels is None:
+        if labels is not None:
             if isinstance(labels, str):
                 with open(labels, 'rb') as f:
                     self.labels = pickle.load(f)
@@ -237,7 +244,7 @@ class BatchGenerator:
         else:
             self.labels = None
 
-        if not image_ids is None:
+        if image_ids is not None:
             if isinstance(image_ids, str):
                 with open(image_ids, 'rb') as f:
                     self.image_ids = pickle.load(f)
@@ -255,7 +262,7 @@ class BatchGenerator:
                   include_classes='all',
                   random_sample=False,
                   ret=False):
-        '''
+        """
         Arguments:
             images_dir (str): The path to the directory that contains the images.
             labels_filename (str): The filepath to a CSV file that contains one ground truth bounding box per line
@@ -285,7 +292,7 @@ class BatchGenerator:
 
         Returns:
             None by default, optionally the image filenames and labels.
-        '''
+        """
 
         # Set class members.
         self.images_dir = images_dir
@@ -376,7 +383,7 @@ class BatchGenerator:
                   exclude_truncated=False,
                   exclude_difficult=False,
                   ret=False):
-        '''
+        """
         This is an XML parser for the Pascal VOC datasets. It might be applicable to other datasets with minor changes to
         the code, but in its current form it expects the data format and XML tags of the Pascal VOC datasets.
 
@@ -405,7 +412,7 @@ class BatchGenerator:
 
         Returns:
             None by default, optionally the image filenames and labels.
-        '''
+        """
         # Set class members.
         self.images_dirs = images_dirs
         self.annotations_dirs = annotations_dirs
@@ -428,7 +435,7 @@ class BatchGenerator:
                 self.image_ids += image_ids
 
             # Loop over all images in this dataset.
-            #for image_id in image_ids:
+            # for image_id in image_ids:
             for image_id in tqdm(image_ids, desc=os.path.basename(image_set_filename)):
 
                 filename = '{}'.format(image_id) + '.jpg'
@@ -440,7 +447,7 @@ class BatchGenerator:
                         soup = BeautifulSoup(f, 'xml')
 
                     folder = soup.folder.text # In case we want to return the folder in addition to the image file name. Relevant for determining which dataset an image belongs to.
-                    #filename = soup.filename.text
+                    # filename = soup.filename.text
 
                     boxes = [] # We'll store all boxes for this image here
                     objects = soup.find_all('object') # Get a list of all objects in this image
@@ -488,7 +495,7 @@ class BatchGenerator:
                    ground_truth_available=False,
                    include_classes = 'all',
                    ret=False):
-        '''
+        """
         This is an JSON parser for the MS COCO datasets. It might be applicable to other datasets with minor changes to
         the code, but in its current form it expects the JSON format of the MS COCO datasets.
 
@@ -511,7 +518,7 @@ class BatchGenerator:
 
         Returns:
             None by default, optionally the image filenames and labels.
-        '''
+        """
         self.images_dirs = images_dirs
         self.annotations_filenames = annotations_filenames
         self.include_classes = include_classes
@@ -594,7 +601,7 @@ class BatchGenerator:
             return self.filenames, self.labels, self.image_ids
 
     def save_filenames_and_labels(self, filenames_path='filenames.pkl', labels_path=None, image_ids_path=None):
-        '''
+        """
         Writes the current `filenames` and `labels` lists to the specified files.
         This is particularly useful for large datasets with annotations that are
         parsed from XML files, which can take quite long. If you'll be using the
@@ -605,13 +612,13 @@ class BatchGenerator:
             filenames_path (str): The path under which to save the filenames pickle.
             labels_path (str): The path under which to save the labels pickle.
             image_ids_path (str, optional): The path under which to save the image IDs pickle.
-        '''
+        """
         with open(filenames_path, 'wb') as f:
             pickle.dump(self.filenames, f)
-        if not labels_path is None:
+        if labels_path is not None:
             with open(labels_path, 'wb') as f:
                 pickle.dump(self.labels, f)
-        if not image_ids_path is None:
+        if image_ids_path is not None:
             with open(image_ids_path, 'wb') as f:
                 pickle.dump(self.image_ids, f)
 
@@ -639,7 +646,7 @@ class BatchGenerator:
                  divide_by_stddev=None,
                  swap_channels=False,
                  keep_images_without_gt=False):
-        '''
+        """
         Generate batches of samples and corresponding labels indefinitely from
         lists of filenames and labels.
 
@@ -788,7 +795,7 @@ class BatchGenerator:
             a 2-tuple containing the processed batch images as its first element and the encoded ground truth boxes
             tensor as its second element if in training mode, or a 1-tuple containing only the processed batch images if
             not in training mode. Any additional outputs must be specified in the `returns` argument.
-        '''
+        """
 
         if shuffle: # Shuffle the data before we begin
             if (self.labels is None) and (self.image_ids is None):
@@ -840,7 +847,7 @@ class BatchGenerator:
                 batch_y = None
 
             # Get the image IDs for this batch (if there are any).
-            if not self.image_ids is None:
+            if self.image_ids is not None:
                 batch_image_ids = self.image_ids[current:current+batch_size]
             else:
                 batch_image_ids = None
@@ -1232,17 +1239,17 @@ class BatchGenerator:
             yield ret
 
     def get_filenames_labels(self):
-        '''
+        """
         Returns:
             The list of filenames, the list of labels, and the list of image IDs.
-        '''
+        """
         return self.filenames, self.labels, self.image_ids
 
     def get_n_samples(self):
-        '''
+        """
         Returns:
             The number of image files in the initialized dataset.
-        '''
+        """
         return len(self.filenames)
 
     def process_offline(self,
@@ -1260,7 +1267,7 @@ class BatchGenerator:
                         limit_boxes=True,
                         include_thresh=0.3,
                         diagnostics=False):
-        '''
+        """
         Perform offline image processing.
 
         This function has mostly the same image processing capabilities as the generator function above,
@@ -1288,7 +1295,7 @@ class BatchGenerator:
             directory and generates a `labels.csv` CSV file that is saved to the same directory.
             The format of the lines in the destination CSV file is the same as that of the
             source CSV file, i.e. `[frame, xmin, xmax, ymin, ymax, class_id]`.
-        '''
+        """
 
         import gc
 

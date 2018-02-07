@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 A custom Keras layer to generate anchor boxes.
 
 Copyright (C) 2017 Pierluigi Ferrari
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -23,10 +24,11 @@ import keras.backend as K
 from keras.engine.topology import InputSpec
 from keras.engine.topology import Layer
 
-from ssd_box_encode_decode_utils import convert_coordinates
+from .ssd_box_encode_decode_utils import convert_coordinates
+
 
 class AnchorBoxes(Layer):
-    '''
+    """
     A Keras layer to create an output tensor containing anchor box coordinates
     and variances based on the input tensor and the passed arguments.
 
@@ -54,7 +56,7 @@ class AnchorBoxes(Layer):
     Output shape:
         5D tensor of shape `(batch, height, width, n_boxes, 8)`. The last axis contains
         the four anchor box coordinates and the four variance values for each box.
-    '''
+    """
 
     def __init__(self,
                  img_height,
@@ -70,7 +72,7 @@ class AnchorBoxes(Layer):
                  coords='centroids',
                  normalize_coords=False,
                  **kwargs):
-        '''
+        """
         All arguments need to be set to the same values as in the box encoding process, otherwise the behavior is undefined.
         Some of these arguments are explained in more detail in the documentation of the `SSDBoxEncoder` class.
 
@@ -99,7 +101,7 @@ class AnchorBoxes(Layer):
                 `(xmin, xmax, ymin, ymax)`. Defaults to 'centroids'.
             normalize_coords (bool, optional): Set to `True` if the model uses relative instead of absolute coordinates,
                 i.e. if the model predicts box coordinates within [0,1] instead of absolute coordinates. Defaults to `False`.
-        '''
+        """
         if K.backend() != 'tensorflow':
             raise TypeError("This layer only supports TensorFlow at the moment, but you are using the {} backend.".format(K.backend()))
 
@@ -136,7 +138,7 @@ class AnchorBoxes(Layer):
         super(AnchorBoxes, self).build(input_shape)
 
     def call(self, x, mask=None):
-        '''
+        """
         Return an anchor box tensor based on the shape of the input tensor.
 
         The logic implemented here is identical to the logic in the module `ssd_box_encode_decode_utils.py`.
@@ -150,7 +152,7 @@ class AnchorBoxes(Layer):
             x (tensor): 4D tensor of shape `(batch, channels, height, width)` if `dim_ordering = 'th'`
                 or `(batch, height, width, channels)` if `dim_ordering = 'tf'`. The input for this
                 layer must be the output of the localization predictor layer.
-        '''
+        """
 
         # Compute box width and height for each aspect ratio
         # The shorter side of the image will be used to compute `w` and `h` using `scale` and `aspect_ratios`.
@@ -158,7 +160,7 @@ class AnchorBoxes(Layer):
         # Compute the box widths and and heights for all aspect ratios
         wh_list = []
         for ar in self.aspect_ratios:
-            if (ar == 1):
+            if ar == 1:
                 # Compute the regular anchor box for aspect ratio 1.
                 box_height = box_width = self.this_scale * size
                 wh_list.append((box_width, box_height))
@@ -264,7 +266,7 @@ class AnchorBoxes(Layer):
             batch_size, feature_map_height, feature_map_width, feature_map_channels = input_shape
         else: # Not yet relevant since TensorFlow is the only supported backend right now, but it can't harm to have this in here for the future
             batch_size, feature_map_channels, feature_map_height, feature_map_width = input_shape
-        return (batch_size, feature_map_height, feature_map_width, self.n_boxes, 8)
+        return batch_size, feature_map_height, feature_map_width, self.n_boxes, 8
 
     def get_config(self):
         config = {

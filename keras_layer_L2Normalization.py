@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 A custom Keras layer to perform L2-normalization.
 
 Copyright (C) 2017 Pierluigi Ferrari
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -23,8 +24,9 @@ import keras.backend as K
 from keras.engine.topology import InputSpec
 from keras.engine.topology import Layer
 
+
 class L2Normalization(Layer):
-    '''
+    """
     Performs L2 normalization on the input tensor with a learnable scaling parameter
     as described in the paper "Parsenet: Looking Wider to See Better" (see references)
     and as used in the original SSD model.
@@ -42,7 +44,7 @@ class L2Normalization(Layer):
 
     References:
         http://cs.unc.edu/~wliu/papers/parsenet.pdf
-    '''
+    """
 
     def __init__(self, gamma_init=20, **kwargs):
         if K.image_dim_ordering() == 'tf':

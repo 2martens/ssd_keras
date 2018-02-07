@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 A Keras port of the original Caffe SSD300 network.
 
 Copyright (C) 2017 Pierluigi Ferrari
@@ -15,7 +16,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from __future__ import division
 import numpy as np
@@ -23,8 +24,9 @@ from keras.models import Model
 from keras.layers import Input, Lambda, Activation, Conv2D, MaxPooling2D, ZeroPadding2D, Reshape, Concatenate
 from keras.regularizers import l2
 
-from keras_layer_AnchorBoxes import AnchorBoxes
-from keras_layer_L2Normalization import L2Normalization
+from .keras_layer_AnchorBoxes import AnchorBoxes
+from .keras_layer_L2Normalization import L2Normalization
+
 
 def ssd_300(image_size,
             n_classes,
@@ -50,7 +52,7 @@ def ssd_300(image_size,
             divide_by_stddev=None,
             swap_channels=True,
             return_predictor_sizes=False):
-    '''
+    """
     Build a Keras model with SSD_300 architecture, see references.
 
     The base network is a reduced atrous VGG-16, extended by the SSD architecture,
@@ -159,7 +161,7 @@ def ssd_300(image_size,
 
     References:
         https://arxiv.org/abs/1512.02325v5
-    '''
+    """
 
     n_predictor_layers = 6 # The number of predictor conv layers in the network is 6 for the original SSD300.
     n_classes += 1 # Account for the background class.

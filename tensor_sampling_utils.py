@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 Utilities that are useful to sub- or up-sample weights tensors.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -15,12 +16,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import numpy as np
 
+
 def sample_tensors(weights_list, sampling_instructions, axes=None, init=None, mean=0.0, stddev=0.005):
-    '''
+    """
     Can sub-sample and/or up-sample individual dimensions of the tensors in the given list
     of input tensors.
 
@@ -82,7 +84,7 @@ def sample_tensors(weights_list, sampling_instructions, axes=None, init=None, me
 
     Returns:
         A list containing the sampled tensors in the same order in which they were given.
-    '''
+    """
 
     first_tensor = weights_list[0]
 

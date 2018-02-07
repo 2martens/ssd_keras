@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 Includes:
 * Function to compute IoU similarity for axis-aligned, rectangular, 2D bounding boxes
 * Function to perform greedy non-maximum suppression
@@ -19,13 +20,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from __future__ import division
 import numpy as np
 
+
 def iou(boxes1, boxes2, coords='centroids'):
-    '''
+    """
     Compute the intersection-over-union similarity (also known as Jaccard similarity)
     of two axis-aligned 2D rectangular boxes or of multiple axis-aligned 2D rectangular
     boxes contained in two arrays with broadcast-compatible shapes.
@@ -47,7 +49,7 @@ def iou(boxes1, boxes2, coords='centroids'):
     Returns:
         A 1D Numpy array of dtype float containing values in [0,1], the Jaccard similarity of the boxes in `boxes1` and `boxes2`.
         0 means there is no overlap between two given boxes, 1 means their coordinates are identical.
-    '''
+    """
 
     if len(boxes1.shape) > 2: raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(len(boxes1.shape)))
     if len(boxes2.shape) > 2: raise ValueError("boxes2 must have rank either 1 or 2, but has rank {}.".format(len(boxes2.shape)))
@@ -73,8 +75,9 @@ def iou(boxes1, boxes2, coords='centroids'):
 
     return intersection / union
 
+
 def convert_coordinates(tensor, start_index, conversion):
-    '''
+    """
     Convert coordinates for axis-aligned 2D boxes between two coordinate formats.
 
     Creates a copy of `tensor`, i.e. does not operate in place. Currently there are
@@ -98,7 +101,7 @@ def convert_coordinates(tensor, start_index, conversion):
         A Numpy nD array, a copy of the input tensor with the converted coordinates
         in place of the original coordinates and the unaltered elements of the original
         tensor elsewhere.
-    '''
+    """
     ind = start_index
     tensor1 = np.copy(tensor).astype(np.float)
     if conversion == 'minmax2centroids':
@@ -129,8 +132,9 @@ def convert_coordinates(tensor, start_index, conversion):
 
     return tensor1
 
+
 def convert_coordinates2(tensor, start_index, conversion):
-    '''
+    """
     A matrix multiplication implementation of `convert_coordinates()`.
     Supports only conversion between the 'centroids' and 'minmax' formats.
 
@@ -139,7 +143,7 @@ def convert_coordinates2(tensor, start_index, conversion):
     because the two matrices are sparse).
 
     For details please refer to the documentation of `convert_coordinates()`.
-    '''
+    """
     ind = start_index
     tensor1 = np.copy(tensor).astype(np.float)
     if conversion == 'minmax2centroids':
@@ -159,8 +163,9 @@ def convert_coordinates2(tensor, start_index, conversion):
 
     return tensor1
 
+
 def greedy_nms(y_pred_decoded, iou_threshold=0.45, coords='corners'):
-    '''
+    """
     Perform greedy non-maximum suppression on the input boxes.
 
     Greedy NMS works by selecting the box with the highest score and
@@ -195,7 +200,7 @@ def greedy_nms(y_pred_decoded, iou_threshold=0.45, coords='corners'):
 
     Returns:
         The predictions after removing non-maxima. The format is the same as the input format.
-    '''
+    """
     y_pred_decoded_nms = []
     for batch_item in y_pred_decoded: # For the labels of each batch item...
         boxes_left = np.copy(batch_item)
@@ -212,11 +217,12 @@ def greedy_nms(y_pred_decoded, iou_threshold=0.45, coords='corners'):
 
     return y_pred_decoded_nms
 
+
 def _greedy_nms(predictions, iou_threshold=0.45, coords='corners'):
-    '''
+    """
     The same greedy non-maximum suppression algorithm as above, but slightly modified for use as an internal
     function for per-class NMS in `decode_y()`.
-    '''
+    """
     boxes_left = np.copy(predictions)
     maxima = [] # This is where we store the boxes that make it through the non-maximum suppression
     while boxes_left.shape[0] > 0: # While there are still boxes left to compare...
@@ -229,11 +235,12 @@ def _greedy_nms(predictions, iou_threshold=0.45, coords='corners'):
         boxes_left = boxes_left[similarities <= iou_threshold] # ...so that we can remove the ones that overlap too much with the maximum box
     return np.array(maxima)
 
+
 def _greedy_nms2(predictions, iou_threshold=0.45, coords='corners'):
-    '''
+    """
     The same greedy non-maximum suppression algorithm as above, but slightly modified for use as an internal
     function in `decode_y2()`.
-    '''
+    """
     boxes_left = np.copy(predictions)
     maxima = [] # This is where we store the boxes that make it through the non-maximum suppression
     while boxes_left.shape[0] > 0: # While there are still boxes left to compare...
@@ -246,6 +253,7 @@ def _greedy_nms2(predictions, iou_threshold=0.45, coords='corners'):
         boxes_left = boxes_left[similarities <= iou_threshold] # ...so that we can remove the ones that overlap too much with the maximum box
     return np.array(maxima)
 
+
 def decode_y(y_pred,
              confidence_thresh=0.01,
              iou_threshold=0.45,
@@ -254,7 +262,7 @@ def decode_y(y_pred,
              normalize_coords=True,
              img_height=None,
              img_width=None):
-    '''
+    """
     Convert model prediction output back to a format that contains only the positive box predictions
     (i.e. the same format that `enconde_y()` takes as input).
 
@@ -295,7 +303,7 @@ def decode_y(y_pred,
         A python list of length `batch_size` where each list element represents the predicted boxes
         for one image and contains a Numpy array of shape `(boxes, 6)` where each row is a box prediction for
         a non-background class for the respective image in the format `[class_id, confidence, xmin, ymin, xmax, ymax]`.
-    '''
+    """
     if normalize_coords and ((img_height is None) or (img_width is None)):
         raise ValueError("If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(img_height, img_width))
 
@@ -355,6 +363,7 @@ def decode_y(y_pred,
 
     return y_pred_decoded
 
+
 def decode_y2(y_pred,
               confidence_thresh=0.5,
               iou_threshold=0.45,
@@ -363,7 +372,7 @@ def decode_y2(y_pred,
               normalize_coords=True,
               img_height=None,
               img_width=None):
-    '''
+    """
     Convert model prediction output back to a format that contains only the positive box predictions
     (i.e. the same format that `enconde_y()` takes as input).
 
@@ -408,7 +417,7 @@ def decode_y2(y_pred,
         A python list of length `batch_size` where each list element represents the predicted boxes
         for one image and contains a Numpy array of shape `(boxes, 6)` where each row is a box prediction for
         a non-background class for the respective image in the format `[class_id, confidence, xmin, xmax, ymin, ymax]`.
-    '''
+    """
     if normalize_coords and ((img_height is None) or (img_width is None)):
         raise ValueError("If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(img_height, img_width))
 
@@ -457,8 +466,9 @@ def decode_y2(y_pred,
 
     return y_pred_decoded
 
+
 class SSDBoxEncoder:
-    '''
+    """
     A class to transform ground truth labels for object detection in images
     (2D bounding box coordinates and class labels) to the format required for
     training an SSD model, and to transform predictions of the SSD model back
@@ -467,7 +477,7 @@ class SSDBoxEncoder:
     In the process of encoding ground truth labels, a template of anchor boxes
     is being built, which are subsequently matched to the ground truth boxes
     via an intersection-over-union threshold criterion.
-    '''
+    """
 
     def __init__(self,
                  img_height,
@@ -488,7 +498,7 @@ class SSDBoxEncoder:
                  neg_iou_threshold=0.3,
                  coords='centroids',
                  normalize_coords=True):
-        '''
+        """
         Arguments:
             img_height (int): The height of the input images.
             img_width (int): The width of the input images.
@@ -564,7 +574,7 @@ class SSDBoxEncoder:
             normalize_coords (bool, optional): If `True`, the encoder uses relative instead of absolute coordinates.
                 This means instead of using absolute tartget coordinates, the encoder will scale all coordinates to be within [0,1].
                 This way learning becomes independent of the input image size. Defaults to `False`.
-        '''
+        """
         predictor_sizes = np.array(predictor_sizes)
         if len(predictor_sizes.shape) == 1:
             predictor_sizes = np.expand_dims(predictor_sizes, axis=0)
@@ -691,7 +701,7 @@ class SSDBoxEncoder:
                                         this_steps=None,
                                         this_offsets=None,
                                         diagnostics=False):
-        '''
+        """
         Compute an array of the spatial positions and sizes of the anchor boxes for one predictor layer
         of size `feature_map_size == [feature_map_height, feature_map_width]`.
 
@@ -718,7 +728,7 @@ class SSDBoxEncoder:
         Returns:
             A 4D Numpy tensor of shape `(feature_map_height, feature_map_width, n_boxes_per_cell, 4)` where the
             last dimension contains `(xmin, xmax, ymin, ymax)` for each anchor box in each cell of the feature map.
-        '''
+        """
         # Compute box width and height for each aspect ratio.
 
         # The shorter side of the image will be used to compute `w` and `h` using `scale` and `aspect_ratios`.
@@ -814,7 +824,7 @@ class SSDBoxEncoder:
             return boxes_tensor
 
     def generate_encode_template(self, batch_size, diagnostics=False):
-        '''
+        """
         Produces an encoding template for the ground truth label tensor for a given batch.
 
         Note that all tensor creation, reshaping and concatenation operations performed in this function
@@ -836,7 +846,7 @@ class SSDBoxEncoder:
             the ground truth labels for training. The last axis has length `#classes + 12` because the model
             output contains not only the 4 predicted box coordinate offsets, but also the 4 coordinates for
             the anchor boxes and the 4 variance values.
-        '''
+        """
         # Tile the anchor boxes for each predictor layer across all batch items.
         boxes_batch = []
         for boxes in self.boxes_list:
@@ -877,7 +887,7 @@ class SSDBoxEncoder:
             return y_encode_template
 
     def encode_y(self, ground_truth_labels, diagnostics=False):
-        '''
+        """
         Convert ground truth bounding box data into a suitable format to train an SSD model.
 
         For each image in the batch, each ground truth bounding box belonging to that image will be compared against each
@@ -906,7 +916,7 @@ class SSDBoxEncoder:
             model per image, and the classes are one-hot-encoded. The four elements after the class vecotrs in
             the last axis are the box coordinates, the next four elements after that are just dummy elements, and
             the last four elements are the variances.
-        '''
+        """
 
         # 1: Generate the template for y_encoded
         y_encode_template = self.generate_encode_template(batch_size=len(ground_truth_labels), diagnostics=False)
@@ -981,6 +991,7 @@ class SSDBoxEncoder:
 # The functions below are for debugging, so you won't normally need them. That is,
 # unless you need to debug your model, of course.
 
+
 def decode_y_debug(y_pred,
                    confidence_thresh=0.01,
                    iou_threshold=0.45,
@@ -990,7 +1001,7 @@ def decode_y_debug(y_pred,
                    img_height=None,
                    img_width=None,
                    variance_encoded_in_target=False):
-    '''
+    """
     This decoder performs the same processing as `decode_y()`, but the output format for each left-over
     predicted box is `[box_id, class_id, confidence, xmin, ymin, xmax, ymax]`.
 
@@ -1029,7 +1040,7 @@ def decode_y_debug(y_pred,
         A python list of length `batch_size` where each list element represents the predicted boxes
         for one image and contains a Numpy array of shape `(boxes, 7)` where each row is a box prediction for
         a non-background class for the respective image in the format `[box_id, class_id, confidence, xmin, ymin, xmax, ymax]`.
-    '''
+    """
     if normalize_coords and ((img_height is None) or (img_width is None)):
         raise ValueError("If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(img_height, img_width))
 
@@ -1102,13 +1113,14 @@ def decode_y_debug(y_pred,
 
     return y_pred_decoded
 
+
 def _greedy_nms_debug(predictions, iou_threshold=0.45, coords='corners'):
-    '''
+    """
     The same greedy non-maximum suppression algorithm as above, but slightly modified for use as an internal
     function for per-class NMS in `decode_y_debug()`. The difference is that it keeps the indices of all left-over boxes
     for each batch item, which allows you to know which predictor layer predicted a given output box and is thus
     useful for debugging.
-    '''
+    """
     boxes_left = np.copy(predictions)
     maxima = [] # This is where we store the boxes that make it through the non-maximum suppression
     while boxes_left.shape[0] > 0: # While there are still boxes left to compare...
@@ -1121,13 +1133,14 @@ def _greedy_nms_debug(predictions, iou_threshold=0.45, coords='corners'):
         boxes_left = boxes_left[similarities <= iou_threshold] # ...so that we can remove the ones that overlap too much with the maximum box
     return np.array(maxima)
 
+
 def get_num_boxes_per_pred_layer(predictor_sizes, aspect_ratios, two_boxes_for_ar1):
-    '''
+    """
     Returns a list of the number of boxes that each predictor layer predicts.
 
     `aspect_ratios` must be a nested list, containing a list of aspect ratios
     for each predictor layer.
-    '''
+    """
     num_boxes_per_pred_layer = []
     for i in range(len(predictor_sizes)):
         if two_boxes_for_ar1:
@@ -1136,8 +1149,9 @@ def get_num_boxes_per_pred_layer(predictor_sizes, aspect_ratios, two_boxes_for_a
             num_boxes_per_pred_layer.append(predictor_sizes[i][0] * predictor_sizes[i][1] * len(aspect_ratios[i]))
     return num_boxes_per_pred_layer
 
+
 def get_pred_layers(y_pred_decoded, num_boxes_per_pred_layer):
-    '''
+    """
     For a given prediction tensor decoded with `decode_y_debug()`, returns a list
     with the indices of the predictor layers that made each predictions.
 
@@ -1150,7 +1164,7 @@ def get_pred_layers(y_pred_decoded, num_boxes_per_pred_layer):
             for each predicted box.
         num_boxes_per_pred_layer (list): A list that contains the total number
             of boxes that each predictor layer predicts.
-    '''
+    """
     pred_layers_all = []
     cum_boxes_per_pred_layer = np.cumsum(num_boxes_per_pred_layer)
     for batch_item in y_pred_decoded:

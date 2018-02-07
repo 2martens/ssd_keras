@@ -1,4 +1,5 @@
-'''
+# -*- coding: utf-8 -*-
+"""
 Utilities that are useful when evaluating models on the Pascal VOC datasets.
 
 Copyright (C) 2018 Pierluigi Ferrari
@@ -15,13 +16,14 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 from math import ceil
 from tqdm import trange
 import sys
 
-from ssd_box_encode_decode_utils import decode_y
+from .ssd_box_encode_decode_utils import decode_y
+
 
 def predict_all_to_txt(model,
                        img_height,
