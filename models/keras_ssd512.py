@@ -29,6 +29,7 @@ from ..keras_layers.keras_layer_L2Normalization import L2Normalization
 from ..keras_layers.keras_layer_DecodeDetections import DecodeDetections
 from ..keras_layers.keras_layer_DecodeDetectionsFast import DecodeDetectionsFast
 
+
 def ssd_512(image_size,
             n_classes,
             mode='training',

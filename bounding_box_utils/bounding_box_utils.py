@@ -21,6 +21,7 @@ limitations under the License.
 from __future__ import division
 import numpy as np
 
+
 def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
     """
     Convert coordinates for axis-aligned 2D boxes between two coordinate formats.

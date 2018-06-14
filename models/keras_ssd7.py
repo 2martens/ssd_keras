@@ -28,6 +28,7 @@ from ..keras_layers.keras_layer_AnchorBoxes import AnchorBoxes
 from ..keras_layers.keras_layer_DecodeDetections import DecodeDetections
 from ..keras_layers.keras_layer_DecodeDetectionsFast import DecodeDetectionsFast
 
+
 def build_model(image_size,
                 n_classes,
                 mode='training',

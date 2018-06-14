@@ -20,6 +20,7 @@ from __future__ import division
 import numpy as np
 import cv2
 
+
 class ConvertColor:
     """
     Converts images between RGB, HSV and grayscale color spaces. This is just a wrapper

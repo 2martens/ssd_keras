@@ -19,6 +19,7 @@ limitations under the License.
 from __future__ import division
 import numpy as np
 
+
 def match_bipartite_greedy(weight_matrix):
     """
     Returns a bipartite matching according to the given weight matrix.
