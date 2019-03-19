@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Miscellaneous data generator utilities.
 
@@ -17,10 +18,15 @@ limitations under the License.
 """
 
 from __future__ import division
+
+from typing import Callable
+from typing import Sequence
+
 import numpy as np
 
 
-def apply_inverse_transforms(y_pred_decoded, inverse_transforms):
+def apply_inverse_transforms(y_pred_decoded: Sequence[np.ndarray],
+                             inverse_transforms: Sequence[Sequence[Callable[[np.ndarray], np.ndarray]]]):
     """
     Takes a list or Numpy array of decoded predictions and applies a given list of
     transforms to them. The list of inverse transforms would usually contain the
@@ -37,7 +43,7 @@ def apply_inverse_transforms(y_pred_decoded, inverse_transforms):
             usually have the shape `(batch_size, num_predictions, 6)`. The last axis
             would usually contain the class ID, confidence score, and four bounding
             box coordinates for each prediction.
-        inverse_predictions (list): A nested list of length `batch_size` that contains
+        inverse_transforms (list): A nested list of length `batch_size` that contains
             for each batch item a list of functions that take one argument (one element
             of `y_pred_decoded` if it is a list or one slice along the first axis of
             `y_pred_decoded` if it is an array) and return an output of the same shape
@@ -53,7 +59,7 @@ def apply_inverse_transforms(y_pred_decoded, inverse_transforms):
 
         for i in range(len(y_pred_decoded)):
             y_pred_decoded_inv.append(np.copy(y_pred_decoded[i]))
-            if y_pred_decoded_inv[i].size > 0: # If there are any predictions for this batch item.
+            if y_pred_decoded_inv[i].size > 0:  # If there are any predictions for this batch item.
                 for inverter in inverse_transforms[i]:
                     if not (inverter is None):
                         y_pred_decoded_inv[i] = inverter(y_pred_decoded_inv[i])
@@ -63,7 +69,7 @@ def apply_inverse_transforms(y_pred_decoded, inverse_transforms):
         y_pred_decoded_inv = np.copy(y_pred_decoded)
 
         for i in range(len(y_pred_decoded)):
-            if y_pred_decoded_inv[i].size > 0: # If there are any predictions for this batch item.
+            if y_pred_decoded_inv[i].size > 0:  # If there are any predictions for this batch item.
                 for inverter in inverse_transforms[i]:
                     if not (inverter is None):
                         y_pred_decoded_inv[i] = inverter(y_pred_decoded_inv[i])

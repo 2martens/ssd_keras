@@ -22,11 +22,12 @@ from tqdm import trange
 from math import ceil
 import sys
 
-from ..data_generator.object_detection_2d_geometric_ops import Resize
-from ..data_generator.object_detection_2d_patch_sampling_ops import RandomPadFixedAR
-from ..data_generator.object_detection_2d_photometric_ops import ConvertTo3Channels
-from ..ssd_encoder_decoder.ssd_output_decoder import decode_detections
-from ..data_generator.object_detection_2d_misc_utils import apply_inverse_transforms
+from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d_geometric_ops as geometric_ops
+from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d_patch_sampling_ops \
+    as patch_sampling_ops
+from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d_photometric_ops as photometric_ops
+from twomartens.masterthesis.ssd_keras.ssd_encoder_decoder import ssd_output_decoder
+from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d_misc_utils as misc_utils
 
 
 def get_coco_category_maps(annotations_file):
@@ -41,9 +42,12 @@ def get_coco_category_maps(annotations_file):
         annotations_file (str): The filepath to any MS COCO annotations JSON file.
 
     Returns:
-        1) cats_to_classes: A dictionary that maps between the original (keys) and the transformed category IDs (values).
-        2) classes_to_cats: A dictionary that maps between the transformed (keys) and the original category IDs (values).
-        3) cats_to_names: A dictionary that maps between original category IDs (keys) and the respective category names (values).
+        1) cats_to_classes: A dictionary that maps between the original (keys) and the transformed category IDs (
+        values).
+        2) classes_to_cats: A dictionary that maps between the transformed (keys) and the original category IDs (
+        values).
+        3) cats_to_names: A dictionary that maps between original category IDs (keys) and the respective category
+        names (values).
         4) classes_to_names: A list of the category names (values) with their indices representing the transformed IDs.
     """
     with open(annotations_file, 'r') as f:
@@ -51,14 +55,13 @@ def get_coco_category_maps(annotations_file):
     cats_to_classes = {}
     classes_to_cats = {}
     cats_to_names = {}
-    classes_to_names = []
-    classes_to_names.append('background') # Need to add the background class first so that the indexing is right.
+    classes_to_names = ['background']
     for i, cat in enumerate(annotations['categories']):
         cats_to_classes[cat['id']] = i + 1
         classes_to_cats[i + 1] = cat['id']
         cats_to_names[cat['id']] = cat['name']
         classes_to_names.append(cat['name'])
-
+    
     return cats_to_classes, classes_to_cats, cats_to_names, classes_to_names
 
 
@@ -90,48 +93,58 @@ def predict_all_to_json(out_file,
         data_generator (DataGenerator): A `DataGenerator` object with the evaluation dataset.
         batch_size (int): The batch size for the evaluation.
         data_generator_mode (str, optional): Either of 'resize' or 'pad'. If 'resize', the input images will
-            be resized (i.e. warped) to `(img_height, img_width)`. This mode does not preserve the aspect ratios of the images.
+            be resized (i.e. warped) to `(img_height, img_width)`. This mode does not preserve the aspect ratios of
+            the images.
             If 'pad', the input images will be first padded so that they have the aspect ratio defined by `img_height`
-            and `img_width` and then resized to `(img_height, img_width)`. This mode preserves the aspect ratios of the images.
-        model_mode (str, optional): The mode in which the model was created, i.e. 'training', 'inference' or 'inference_fast'.
-            This is needed in order to know whether the model output is already decoded or still needs to be decoded. Refer to
+            and `img_width` and then resized to `(img_height, img_width)`. This mode preserves the aspect ratios of
+            the images.
+        model_mode (str, optional): The mode in which the model was created, i.e. 'training', 'inference' or
+        'inference_fast'.
+            This is needed in order to know whether the model output is already decoded or still needs to be decoded.
+            Refer to
             the model documentation for the meaning of the individual modes.
         confidence_thresh (float, optional): A float in [0,1), the minimum classification confidence in a specific
             positive class in order to be considered for the non-maximum suppression stage for the respective class.
-            A lower value will result in a larger part of the selection process being done by the non-maximum suppression
-            stage, while a larger value will result in a larger part of the selection process happening in the confidence
+            A lower value will result in a larger part of the selection process being done by the non-maximum
+            suppression
+            stage, while a larger value will result in a larger part of the selection process happening in the
+            confidence
             thresholding stage.
-        iou_threshold (float, optional): A float in [0,1]. All boxes with a Jaccard similarity of greater than `iou_threshold`
-            with a locally maximal box will be removed from the set of predictions for a given class, where 'maximal' refers
-            to the box score.
+        iou_threshold (float, optional): A float in [0,1]. All boxes with a Jaccard similarity of greater than
+        `iou_threshold`
+            with a locally maximal box will be removed from the set of predictions for a given class, where 'maximal'
+            refers to the box score.
         top_k (int, optional): The number of highest scoring predictions to be kept for each batch item after the
             non-maximum suppression stage. Defaults to 200, following the paper.
-        input_coords (str, optional): The box coordinate format that the model outputs. Can be either 'centroids'
+        pred_coords (str, optional): The box coordinate format that the model outputs. Can be either 'centroids'
             for the format `(cx, cy, w, h)` (box center coordinates, width, and height), 'minmax' for the format
             `(xmin, xmax, ymin, ymax)`, or 'corners' for the format `(xmin, ymin, xmax, ymax)`.
-        normalize_coords (bool, optional): Set to `True` if the model outputs relative coordinates (i.e. coordinates in [0,1])
+        normalize_coords (bool, optional): Set to `True` if the model outputs relative coordinates (i.e. coordinates
+        in [0,1])
             and you wish to transform these relative coordinates back to absolute coordinates. If the model outputs
             relative coordinates, but you do not want to convert them back to absolute coordinates, set this to `False`.
-            Do not set this to `True` if the model already outputs absolute coordinates, as that would result in incorrect
-            coordinates. Requires `img_height` and `img_width` if set to `True`.
+            Do not set this to `True` if the model already outputs absolute coordinates, as that would result in
+            incorrect coordinates. Requires `img_height` and `img_width` if set to `True`.
 
     Returns:
         None.
     """
-
-    convert_to_3_channels = ConvertTo3Channels()
-    resize = Resize(height=img_height,width=img_width)
+    
+    convert_to_3_channels = photometric_ops.ConvertTo3Channels()
+    resize = geometric_ops.Resize(height=img_height, width=img_width)
     if data_generator_mode == 'resize':
         transformations = [convert_to_3_channels,
                            resize]
     elif data_generator_mode == 'pad':
-        random_pad = RandomPadFixedAR(patch_aspect_ratio=img_width/img_height, clip_boxes=False)
+        random_pad = patch_sampling_ops.RandomPadFixedAR(patch_aspect_ratio=img_width / img_height)
         transformations = [convert_to_3_channels,
                            random_pad,
                            resize]
     else:
-        raise ValueError("Unexpected argument value: `data_generator_mode` can be either of 'resize' or 'pad', but received '{}'.".format(data_generator_mode))
-
+        raise ValueError(
+            "Unexpected argument value: `data_generator_mode` can be either of 'resize' or 'pad', but received '{}'.".
+            format(data_generator_mode))
+    
     # Set the generator parameters.
     generator = data_generator.generate(batch_size=batch_size,
                                         shuffle=False,
@@ -150,32 +163,32 @@ def predict_all_to_json(out_file,
     # Loop over all batches.
     tr = trange(n_batches, file=sys.stdout)
     tr.set_description('Producing results file')
-    for i in tr:
+    for _ in tr:
         # Generate batch.
-        batch_X, batch_image_ids, batch_inverse_transforms = next(generator)
+        batch_x, batch_image_ids, batch_inverse_transforms = next(generator)
         # Predict.
-        y_pred = model.predict(batch_X)
+        y_pred = model.predict(batch_x)
         # If the model was created in 'training' mode, the raw predictions need to
         # be decoded and filtered, otherwise that's already taken care of.
         if model_mode == 'training':
             # Decode.
-            y_pred = decode_detections(y_pred,
-                                       confidence_thresh=confidence_thresh,
-                                       iou_threshold=iou_threshold,
-                                       top_k=top_k,
-                                       input_coords=pred_coords,
-                                       normalize_coords=normalize_coords,
-                                       img_height=img_height,
-                                       img_width=img_width)
+            y_pred = ssd_output_decoder.decode_detections(y_pred,
+                                                          confidence_thresh=confidence_thresh,
+                                                          iou_threshold=iou_threshold,
+                                                          top_k=top_k,
+                                                          input_coords=pred_coords,
+                                                          normalize_coords=normalize_coords,
+                                                          img_height=img_height,
+                                                          img_width=img_width)
         else:
             # Filter out the all-zeros dummy elements of `y_pred`.
             y_pred_filtered = []
-            for i in range(len(y_pred)):
-                y_pred_filtered.append(y_pred[i][y_pred[i,:,0] != 0])
+            for j in range(len(y_pred)):
+                y_pred_filtered.append(y_pred[j][y_pred[j, :, 0] != 0])
             y_pred = y_pred_filtered
         # Convert the predicted box coordinates for the original images.
-        y_pred = apply_inverse_transforms(y_pred, batch_inverse_transforms)
-
+        y_pred = misc_utils.apply_inverse_transforms(y_pred, batch_inverse_transforms)
+        
         # Convert each predicted box into the results format.
         for k, batch_item in enumerate(y_pred):
             for box in batch_item:
@@ -190,14 +203,11 @@ def predict_all_to_json(out_file,
                 width = xmax - xmin
                 height = ymax - ymin
                 bbox = [xmin, ymin, width, height]
-                result = {}
-                result['image_id'] = batch_image_ids[k]
-                result['category_id'] = cat_id
-                result['score'] = float(round(box[1], 3))
-                result['bbox'] = bbox
+                result = {'image_id': batch_image_ids[k], 'category_id': cat_id, 'score': float(round(box[1], 3)),
+                          'bbox': bbox}
                 results.append(result)
-
+    
     with open(out_file, 'w') as f:
         json.dump(results, f)
-
+    
     print("Prediction results saved in '{}'".format(out_file))

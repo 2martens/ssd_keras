@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Utilities to match ground truth boxes to anchor boxes.
 
@@ -17,10 +18,13 @@ limitations under the License.
 """
 
 from __future__ import division
+
+from typing import Tuple
+
 import numpy as np
 
 
-def match_bipartite_greedy(weight_matrix):
+def match_bipartite_greedy(weight_matrix: np.ndarray) -> np.ndarray:
     """
     Returns a bipartite matching according to the given weight matrix.
 
@@ -51,9 +55,9 @@ def match_bipartite_greedy(weight_matrix):
         along the first axis.
     """
 
-    weight_matrix = np.copy(weight_matrix) # We'll modify this array.
+    weight_matrix = np.copy(weight_matrix)  # We'll modify this array.
     num_ground_truth_boxes = weight_matrix.shape[0]
-    all_gt_indices = list(range(num_ground_truth_boxes)) # Only relevant for fancy-indexing below.
+    all_gt_indices = list(range(num_ground_truth_boxes))  # Only relevant for fancy-indexing below.
 
     # This 1D array will contain for each ground truth box the index of
     # the matched anchor box.
@@ -65,21 +69,22 @@ def match_bipartite_greedy(weight_matrix):
 
         # Find the maximal anchor-ground truth pair in two steps: First, reduce
         # over the anchor boxes and then reduce over the ground truth boxes.
-        anchor_indices = np.argmax(weight_matrix, axis=1) # Reduce along the anchor box axis.
+        anchor_indices = np.argmax(weight_matrix, axis=1)  # Reduce along the anchor box axis.
         overlaps = weight_matrix[all_gt_indices, anchor_indices]
-        ground_truth_index = np.argmax(overlaps) # Reduce along the ground truth box axis.
+        ground_truth_index = np.argmax(overlaps)  # Reduce along the ground truth box axis.
         anchor_index = anchor_indices[ground_truth_index]
-        matches[ground_truth_index] = anchor_index # Set the match.
+        matches[ground_truth_index] = anchor_index  # Set the match.
 
         # Set the row of the matched ground truth box and the column of the matched
         # anchor box to all zeros. This ensures that those boxes will not be matched again,
         # because they will never be the best matches for any other boxes.
         weight_matrix[ground_truth_index] = 0
-        weight_matrix[:,anchor_index] = 0
+        weight_matrix[:, anchor_index] = 0
 
     return matches
 
-def match_multi(weight_matrix, threshold):
+
+def match_multi(weight_matrix: np.ndarray, threshold: float) -> Tuple[np.ndarray, np.ndarray]:
     """
     Matches all elements along the second axis of `weight_matrix` to their best
     matches along the first axis subject to the constraint that the weight of a match
@@ -104,14 +109,14 @@ def match_multi(weight_matrix, threshold):
     """
 
     num_anchor_boxes = weight_matrix.shape[1]
-    all_anchor_indices = list(range(num_anchor_boxes)) # Only relevant for fancy-indexing below.
+    all_anchor_indices = list(range(num_anchor_boxes))  # Only relevant for fancy-indexing below.
 
     # Find the best ground truth match for every anchor box.
-    ground_truth_indices = np.argmax(weight_matrix, axis=0) # Array of shape (weight_matrix.shape[1],)
-    overlaps = weight_matrix[ground_truth_indices, all_anchor_indices] # Array of shape (weight_matrix.shape[1],)
+    ground_truth_indices = np.argmax(weight_matrix, axis=0)  # Array of shape (weight_matrix.shape[1],)
+    overlaps = weight_matrix[ground_truth_indices, all_anchor_indices]  # Array of shape (weight_matrix.shape[1],)
 
     # Filter out the matches with a weight below the threshold.
-    anchor_indices_thresh_met = np.nonzero(overlaps >= threshold)[0]
-    gt_indices_thresh_met = ground_truth_indices[anchor_indices_thresh_met]
+    anchor_indices_thresh_met = np.nonzero(overlaps >= threshold)[0]  # type: np.ndarray
+    gt_indices_thresh_met = ground_truth_indices[anchor_indices_thresh_met]  # type: np.ndarray
 
     return gt_indices_thresh_met, anchor_indices_thresh_met

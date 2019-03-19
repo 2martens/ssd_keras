@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Includes:
 * Function to compute the IoU similarity for axis-aligned, rectangular, 2D bounding boxes
@@ -22,7 +23,8 @@ from __future__ import division
 import numpy as np
 
 
-def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
+def convert_coordinates(tensor: np.ndarray, start_index: int, conversion: str,
+                        border_pixels: str = 'half') -> np.ndarray:
     """
     Convert coordinates for axis-aligned 2D boxes between two coordinate formats.
 
@@ -36,7 +38,7 @@ def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
         tensor (array): A Numpy nD array containing the four consecutive coordinates
             to be converted somewhere in the last axis.
         start_index (int): The index of the first coordinate in the last axis of `tensor`.
-        conversion (str, optional): The conversion direction. Can be 'minmax2centroids',
+        conversion (str): The conversion direction. Can be 'minmax2centroids',
             'centroids2minmax', 'corners2centroids', 'centroids2corners', 'minmax2corners',
             or 'corners2minmax'.
         border_pixels (str, optional): How to treat the border pixels of the bounding boxes.
@@ -56,38 +58,46 @@ def convert_coordinates(tensor, start_index, conversion, border_pixels='half'):
         d = 1
     elif border_pixels == 'exclude':
         d = -1
-
+    else:
+        raise ValueError(
+            "Unexpected border pixels value. Supported values are 'half', "
+            "'include', and 'exclude'."
+        )
+    
     ind = start_index
     tensor1 = np.copy(tensor).astype(np.float)
     if conversion == 'minmax2centroids':
-        tensor1[..., ind] = (tensor[..., ind] + tensor[..., ind+1]) / 2.0 # Set cx
-        tensor1[..., ind+1] = (tensor[..., ind+2] + tensor[..., ind+3]) / 2.0 # Set cy
-        tensor1[..., ind+2] = tensor[..., ind+1] - tensor[..., ind] + d # Set w
-        tensor1[..., ind+3] = tensor[..., ind+3] - tensor[..., ind+2] + d # Set h
+        tensor1[..., ind] = (tensor[..., ind] + tensor[..., ind + 1]) / 2.0  # Set cx
+        tensor1[..., ind + 1] = (tensor[..., ind + 2] + tensor[..., ind + 3]) / 2.0  # Set cy
+        tensor1[..., ind + 2] = tensor[..., ind + 1] - tensor[..., ind] + d  # Set w
+        tensor1[..., ind + 3] = tensor[..., ind + 3] - tensor[..., ind + 2] + d  # Set h
     elif conversion == 'centroids2minmax':
-        tensor1[..., ind] = tensor[..., ind] - tensor[..., ind+2] / 2.0 # Set xmin
-        tensor1[..., ind+1] = tensor[..., ind] + tensor[..., ind+2] / 2.0 # Set xmax
-        tensor1[..., ind+2] = tensor[..., ind+1] - tensor[..., ind+3] / 2.0 # Set ymin
-        tensor1[..., ind+3] = tensor[..., ind+1] + tensor[..., ind+3] / 2.0 # Set ymax
+        tensor1[..., ind] = tensor[..., ind] - tensor[..., ind + 2] / 2.0  # Set xmin
+        tensor1[..., ind + 1] = tensor[..., ind] + tensor[..., ind + 2] / 2.0  # Set xmax
+        tensor1[..., ind + 2] = tensor[..., ind + 1] - tensor[..., ind + 3] / 2.0  # Set ymin
+        tensor1[..., ind + 3] = tensor[..., ind + 1] + tensor[..., ind + 3] / 2.0  # Set ymax
     elif conversion == 'corners2centroids':
-        tensor1[..., ind] = (tensor[..., ind] + tensor[..., ind+2]) / 2.0 # Set cx
-        tensor1[..., ind+1] = (tensor[..., ind+1] + tensor[..., ind+3]) / 2.0 # Set cy
-        tensor1[..., ind+2] = tensor[..., ind+2] - tensor[..., ind] + d # Set w
-        tensor1[..., ind+3] = tensor[..., ind+3] - tensor[..., ind+1] + d # Set h
+        tensor1[..., ind] = (tensor[..., ind] + tensor[..., ind + 2]) / 2.0  # Set cx
+        tensor1[..., ind + 1] = (tensor[..., ind + 1] + tensor[..., ind + 3]) / 2.0  # Set cy
+        tensor1[..., ind + 2] = tensor[..., ind + 2] - tensor[..., ind] + d  # Set w
+        tensor1[..., ind + 3] = tensor[..., ind + 3] - tensor[..., ind + 1] + d  # Set h
     elif conversion == 'centroids2corners':
-        tensor1[..., ind] = tensor[..., ind] - tensor[..., ind+2] / 2.0 # Set xmin
-        tensor1[..., ind+1] = tensor[..., ind+1] - tensor[..., ind+3] / 2.0 # Set ymin
-        tensor1[..., ind+2] = tensor[..., ind] + tensor[..., ind+2] / 2.0 # Set xmax
-        tensor1[..., ind+3] = tensor[..., ind+1] + tensor[..., ind+3] / 2.0 # Set ymax
+        tensor1[..., ind] = tensor[..., ind] - tensor[..., ind + 2] / 2.0  # Set xmin
+        tensor1[..., ind + 1] = tensor[..., ind + 1] - tensor[..., ind + 3] / 2.0  # Set ymin
+        tensor1[..., ind + 2] = tensor[..., ind] + tensor[..., ind + 2] / 2.0  # Set xmax
+        tensor1[..., ind + 3] = tensor[..., ind + 1] + tensor[..., ind + 3] / 2.0  # Set ymax
     elif (conversion == 'minmax2corners') or (conversion == 'corners2minmax'):
-        tensor1[..., ind+1] = tensor[..., ind+2]
-        tensor1[..., ind+2] = tensor[..., ind+1]
+        tensor1[..., ind + 1] = tensor[..., ind + 2]
+        tensor1[..., ind + 2] = tensor[..., ind + 1]
     else:
-        raise ValueError("Unexpected conversion value. Supported values are 'minmax2centroids', 'centroids2minmax', 'corners2centroids', 'centroids2corners', 'minmax2corners', and 'corners2minmax'.")
-
+        raise ValueError(
+            "Unexpected conversion value. Supported values are 'minmax2centroids', 'centroids2minmax', "
+            "'corners2centroids', 'centroids2corners', 'minmax2corners', and 'corners2minmax'.")
+    
     return tensor1
 
-def convert_coordinates2(tensor, start_index, conversion):
+
+def convert_coordinates2(tensor: np.ndarray, start_index: int, conversion: str) -> np.ndarray:
     """
     A matrix multiplication implementation of `convert_coordinates()`.
     Supports only conversion between the 'centroids' and 'minmax' formats.
@@ -101,23 +111,25 @@ def convert_coordinates2(tensor, start_index, conversion):
     ind = start_index
     tensor1 = np.copy(tensor).astype(np.float)
     if conversion == 'minmax2centroids':
-        M = np.array([[0.5, 0. , -1.,  0.],
-                      [0.5, 0. ,  1.,  0.],
-                      [0. , 0.5,  0., -1.],
-                      [0. , 0.5,  0.,  1.]])
-        tensor1[..., ind:ind+4] = np.dot(tensor1[..., ind:ind+4], M)
+        m = np.array([[0.5, 0., -1., 0.],
+                      [0.5, 0., 1., 0.],
+                      [0., 0.5, 0., -1.],
+                      [0., 0.5, 0., 1.]])
+        tensor1[..., ind:ind + 4] = np.dot(tensor1[..., ind:ind + 4], m)
     elif conversion == 'centroids2minmax':
-        M = np.array([[ 1. , 1. ,  0. , 0. ],
-                      [ 0. , 0. ,  1. , 1. ],
-                      [-0.5, 0.5,  0. , 0. ],
-                      [ 0. , 0. , -0.5, 0.5]]) # The multiplicative inverse of the matrix above
-        tensor1[..., ind:ind+4] = np.dot(tensor1[..., ind:ind+4], M)
+        m = np.array([[1., 1., 0., 0.],
+                      [0., 0., 1., 1.],
+                      [-0.5, 0.5, 0., 0.],
+                      [0., 0., -0.5, 0.5]])  # The multiplicative inverse of the matrix above
+        tensor1[..., ind:ind + 4] = np.dot(tensor1[..., ind:ind + 4], m)
     else:
         raise ValueError("Unexpected conversion value. Supported values are 'minmax2centroids' and 'centroids2minmax'.")
-
+    
     return tensor1
 
-def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels='half'):
+
+def intersection_area(boxes1: np.ndarray, boxes2: np.ndarray, coords: str = 'centroids', mode: str = 'outer_product',
+                      border_pixels: str = 'half') -> np.ndarray:
     """
     Computes the intersection areas of two sets of axis-aligned 2D rectangular boxes.
 
@@ -140,7 +152,8 @@ def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', 
             `(cx, cy, w, h)`, 'minmax' for the format `(xmin, xmax, ymin, ymax)`, or 'corners' for the format
             `(xmin, ymin, xmax, ymax)`.
         mode (str, optional): Can be one of 'outer_product' and 'element-wise'. In 'outer_product' mode, returns an
-            `(m,n)` matrix with the intersection areas for all possible combinations of the `m` boxes in `boxes1` with the
+            `(m,n)` matrix with the intersection areas for all possible combinations of the `m` boxes in `boxes1`
+            with the
             `n` boxes in `boxes2`. In 'element-wise' mode, returns a 1D array and the shapes of `boxes1` and `boxes2`
             must be boadcast-compatible. If both `boxes1` and `boxes2` have `m` boxes, then this returns an array of
             length `m` where the i-th position contains the intersection area of `boxes1[i]` with `boxes2[i]`.
@@ -154,28 +167,35 @@ def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', 
         A 1D or 2D Numpy array (refer to the `mode` argument for details) of dtype float containing values with
         the intersection areas of the boxes in `boxes1` and `boxes2`.
     """
-
+    
     # Make sure the boxes have the right shapes.
-    if boxes1.ndim > 2: raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(boxes1.ndim))
-    if boxes2.ndim > 2: raise ValueError("boxes2 must have rank either 1 or 2, but has rank {}.".format(boxes2.ndim))
-
-    if boxes1.ndim == 1: boxes1 = np.expand_dims(boxes1, axis=0)
-    if boxes2.ndim == 1: boxes2 = np.expand_dims(boxes2, axis=0)
-
-    if not (boxes1.shape[1] == boxes2.shape[1] == 4): raise ValueError("All boxes must consist of 4 coordinates, but the boxes in `boxes1` and `boxes2` have {} and {} coordinates, respectively.".format(boxes1.shape[1], boxes2.shape[1]))
-    if not mode in {'outer_product', 'element-wise'}: raise ValueError("`mode` must be one of 'outer_product' and 'element-wise', but got '{}'.",format(mode))
-
+    if boxes1.ndim > 2:
+        raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(boxes1.ndim))
+    if boxes2.ndim > 2:
+        raise ValueError("boxes2 must have rank either 1 or 2, but has rank {}.".format(boxes2.ndim))
+    
+    if boxes1.ndim == 1:
+        boxes1 = np.expand_dims(boxes1, axis=0)
+    if boxes2.ndim == 1:
+        boxes2 = np.expand_dims(boxes2, axis=0)
+    
+    if not (boxes1.shape[1] == boxes2.shape[1] == 4):
+        raise ValueError(
+            "All boxes must consist of 4 coordinates, but the boxes in `boxes1` and `boxes2` have {} and {} "
+            "coordinates, respectively.".format(
+                boxes1.shape[1], boxes2.shape[1]))
+    if mode not in {'outer_product', 'element-wise'}:
+        raise ValueError("`mode` must be one of 'outer_product' and 'element-wise', but got '{}'.", format(mode))
+    
     # Convert the coordinates if necessary.
     if coords == 'centroids':
         boxes1 = convert_coordinates(boxes1, start_index=0, conversion='centroids2corners')
         boxes2 = convert_coordinates(boxes2, start_index=0, conversion='centroids2corners')
         coords = 'corners'
-    elif not (coords in {'minmax', 'corners'}):
-        raise ValueError("Unexpected value for `coords`. Supported values are 'minmax', 'corners' and 'centroids'.")
-
-    m = boxes1.shape[0] # The number of boxes in `boxes1`
-    n = boxes2.shape[0] # The number of boxes in `boxes2`
-
+    
+    m = boxes1.shape[0]  # The number of boxes in `boxes1`
+    n = boxes2.shape[0]  # The number of boxes in `boxes2`
+    
     # Set the correct coordinate indices for the respective formats.
     if coords == 'corners':
         xmin = 0
@@ -187,51 +207,62 @@ def intersection_area(boxes1, boxes2, coords='centroids', mode='outer_product', 
         xmax = 1
         ymin = 2
         ymax = 3
-
+    else:
+        raise ValueError("Unexpected value for `coords`. Supported values are 'minmax', 'corners' and 'centroids'.")
+    
     if border_pixels == 'half':
         d = 0
     elif border_pixels == 'include':
-        d = 1 # If border pixels are supposed to belong to the bounding boxes, we have to add one pixel to any difference `xmax - xmin` or `ymax - ymin`.
+        d = 1  # If border pixels are supposed to belong to the bounding boxes, we have to add one pixel to any
+        # difference `xmax - xmin` or `ymax - ymin`.
     elif border_pixels == 'exclude':
-        d = -1 # If border pixels are not supposed to belong to the bounding boxes, we have to subtract one pixel from any difference `xmax - xmin` or `ymax - ymin`.
-
+        d = -1  # If border pixels are not supposed to belong to the bounding boxes, we have to subtract one pixel
+        # from any difference `xmax - xmin` or `ymax - ymin`.
+    else:
+        raise ValueError(
+            "Unexpected border pixels value. Supported values are 'half', "
+            "'include', and 'exclude'."
+        )
+    
     # Compute the intersection areas.
-
+    
     if mode == 'outer_product':
-
+        
         # For all possible box combinations, get the greater xmin and ymin values.
         # This is a tensor of shape (m,n,2).
-        min_xy = np.maximum(np.tile(np.expand_dims(boxes1[:,[xmin,ymin]], axis=1), reps=(1, n, 1)),
-                            np.tile(np.expand_dims(boxes2[:,[xmin,ymin]], axis=0), reps=(m, 1, 1)))
-
+        min_xy = np.maximum(np.tile(np.expand_dims(boxes1[:, [xmin, ymin]], axis=1), reps=(1, n, 1)),
+                            np.tile(np.expand_dims(boxes2[:, [xmin, ymin]], axis=0), reps=(m, 1, 1)))
+        
         # For all possible box combinations, get the smaller xmax and ymax values.
         # This is a tensor of shape (m,n,2).
-        max_xy = np.minimum(np.tile(np.expand_dims(boxes1[:,[xmax,ymax]], axis=1), reps=(1, n, 1)),
-                            np.tile(np.expand_dims(boxes2[:,[xmax,ymax]], axis=0), reps=(m, 1, 1)))
-
+        max_xy = np.minimum(np.tile(np.expand_dims(boxes1[:, [xmax, ymax]], axis=1), reps=(1, n, 1)),
+                            np.tile(np.expand_dims(boxes2[:, [xmax, ymax]], axis=0), reps=(m, 1, 1)))
+        
         # Compute the side lengths of the intersection rectangles.
         side_lengths = np.maximum(0, max_xy - min_xy + d)
-
-        return side_lengths[:,:,0] * side_lengths[:,:,1]
-
+        
+        return side_lengths[:, :, 0] * side_lengths[:, :, 1]
+    
     elif mode == 'element-wise':
-
-        min_xy = np.maximum(boxes1[:,[xmin,ymin]], boxes2[:,[xmin,ymin]])
-        max_xy = np.minimum(boxes1[:,[xmax,ymax]], boxes2[:,[xmax,ymax]])
-
+        
+        min_xy = np.maximum(boxes1[:, [xmin, ymin]], boxes2[:, [xmin, ymin]])
+        max_xy = np.minimum(boxes1[:, [xmax, ymax]], boxes2[:, [xmax, ymax]])
+        
         # Compute the side lengths of the intersection rectangles.
         side_lengths = np.maximum(0, max_xy - min_xy + d)
+        
+        return side_lengths[:, 0] * side_lengths[:, 1]
 
-        return side_lengths[:,0] * side_lengths[:,1]
 
-def intersection_area_(boxes1, boxes2, coords='corners', mode='outer_product', border_pixels='half'):
+def intersection_area_(boxes1: np.ndarray, boxes2: np.ndarray, coords: str = 'corners',
+                       mode: str = 'outer_product', border_pixels: str = 'half') -> np.ndarray:
     """
     The same as 'intersection_area()' but for internal use, i.e. without all the safety checks.
     """
-
-    m = boxes1.shape[0] # The number of boxes in `boxes1`
-    n = boxes2.shape[0] # The number of boxes in `boxes2`
-
+    
+    m = boxes1.shape[0]  # The number of boxes in `boxes1`
+    n = boxes2.shape[0]  # The number of boxes in `boxes2`
+    
     # Set the correct coordinate indices for the respective formats.
     if coords == 'corners':
         xmin = 0
@@ -243,45 +274,55 @@ def intersection_area_(boxes1, boxes2, coords='corners', mode='outer_product', b
         xmax = 1
         ymin = 2
         ymax = 3
-
+    else:
+        raise ValueError("Unexpected value for `coords`. Supported values are 'minmax', 'corners' and 'centroids'.")
+    
     if border_pixels == 'half':
         d = 0
     elif border_pixels == 'include':
-        d = 1 # If border pixels are supposed to belong to the bounding boxes, we have to add one pixel to any difference `xmax - xmin` or `ymax - ymin`.
+        d = 1  # If border pixels are supposed to belong to the bounding boxes, we have to add one pixel to any
+        # difference `xmax - xmin` or `ymax - ymin`.
     elif border_pixels == 'exclude':
-        d = -1 # If border pixels are not supposed to belong to the bounding boxes, we have to subtract one pixel from any difference `xmax - xmin` or `ymax - ymin`.
-
+        d = -1  # If border pixels are not supposed to belong to the bounding boxes, we have to subtract one pixel
+        # from any difference `xmax - xmin` or `ymax - ymin`.
+    else:
+        raise ValueError(
+            "Unexpected border pixels value. Supported values are 'half', "
+            "'include', and 'exclude'."
+        )
+    
     # Compute the intersection areas.
-
+    
     if mode == 'outer_product':
-
+        
         # For all possible box combinations, get the greater xmin and ymin values.
         # This is a tensor of shape (m,n,2).
-        min_xy = np.maximum(np.tile(np.expand_dims(boxes1[:,[xmin,ymin]], axis=1), reps=(1, n, 1)),
-                            np.tile(np.expand_dims(boxes2[:,[xmin,ymin]], axis=0), reps=(m, 1, 1)))
-
+        min_xy = np.maximum(np.tile(np.expand_dims(boxes1[:, [xmin, ymin]], axis=1), reps=(1, n, 1)),
+                            np.tile(np.expand_dims(boxes2[:, [xmin, ymin]], axis=0), reps=(m, 1, 1)))
+        
         # For all possible box combinations, get the smaller xmax and ymax values.
         # This is a tensor of shape (m,n,2).
-        max_xy = np.minimum(np.tile(np.expand_dims(boxes1[:,[xmax,ymax]], axis=1), reps=(1, n, 1)),
-                            np.tile(np.expand_dims(boxes2[:,[xmax,ymax]], axis=0), reps=(m, 1, 1)))
-
+        max_xy = np.minimum(np.tile(np.expand_dims(boxes1[:, [xmax, ymax]], axis=1), reps=(1, n, 1)),
+                            np.tile(np.expand_dims(boxes2[:, [xmax, ymax]], axis=0), reps=(m, 1, 1)))
+        
         # Compute the side lengths of the intersection rectangles.
         side_lengths = np.maximum(0, max_xy - min_xy + d)
-
-        return side_lengths[:,:,0] * side_lengths[:,:,1]
-
+        
+        return side_lengths[:, :, 0] * side_lengths[:, :, 1]
+    
     elif mode == 'element-wise':
-
-        min_xy = np.maximum(boxes1[:,[xmin,ymin]], boxes2[:,[xmin,ymin]])
-        max_xy = np.minimum(boxes1[:,[xmax,ymax]], boxes2[:,[xmax,ymax]])
-
+        
+        min_xy = np.maximum(boxes1[:, [xmin, ymin]], boxes2[:, [xmin, ymin]])
+        max_xy = np.minimum(boxes1[:, [xmax, ymax]], boxes2[:, [xmax, ymax]])
+        
         # Compute the side lengths of the intersection rectangles.
         side_lengths = np.maximum(0, max_xy - min_xy + d)
+        
+        return side_lengths[:, 0] * side_lengths[:, 1]
 
-        return side_lengths[:,0] * side_lengths[:,1]
 
-
-def iou(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels='half'):
+def iou(boxes1: np.ndarray, boxes2: np.ndarray, coords: str = 'centroids',
+        mode: str = 'outer_product', border_pixels: str = 'half') -> np.ndarray:
     """
     Computes the intersection-over-union similarity (also known as Jaccard similarity)
     of two sets of axis-aligned 2D rectangular boxes.
@@ -320,36 +361,41 @@ def iou(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels=
         the Jaccard similarity of the boxes in `boxes1` and `boxes2`. 0 means there is no overlap between two given
         boxes, 1 means their coordinates are identical.
     """
-
+    
     # Make sure the boxes have the right shapes.
-    if boxes1.ndim > 2: raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(boxes1.ndim))
-    if boxes2.ndim > 2: raise ValueError("boxes2 must have rank either 1 or 2, but has rank {}.".format(boxes2.ndim))
-
-    if boxes1.ndim == 1: boxes1 = np.expand_dims(boxes1, axis=0)
-    if boxes2.ndim == 1: boxes2 = np.expand_dims(boxes2, axis=0)
-
-    if not (boxes1.shape[1] == boxes2.shape[1] == 4): raise ValueError("All boxes must consist of 4 coordinates, but the boxes in `boxes1` and `boxes2` have {} and {} coordinates, respectively.".format(boxes1.shape[1], boxes2.shape[1]))
-    if not mode in {'outer_product', 'element-wise'}: raise ValueError("`mode` must be one of 'outer_product' and 'element-wise', but got '{}'.".format(mode))
-
+    if boxes1.ndim > 2:
+        raise ValueError("boxes1 must have rank either 1 or 2, but has rank {}.".format(boxes1.ndim))
+    if boxes2.ndim > 2:
+        raise ValueError("boxes2 must have rank either 1 or 2, but has rank {}.".format(boxes2.ndim))
+    
+    if boxes1.ndim == 1:
+        boxes1 = np.expand_dims(boxes1, axis=0)
+    if boxes2.ndim == 1:
+        boxes2 = np.expand_dims(boxes2, axis=0)
+    
+    if not (boxes1.shape[1] == boxes2.shape[1] == 4):
+        raise ValueError(
+            "All boxes must consist of 4 coordinates, but the boxes in `boxes1` and `boxes2` have {} and {} "
+            "coordinates, respectively.".format(
+                boxes1.shape[1], boxes2.shape[1]))
+    
     # Convert the coordinates if necessary.
     if coords == 'centroids':
         boxes1 = convert_coordinates(boxes1, start_index=0, conversion='centroids2corners')
         boxes2 = convert_coordinates(boxes2, start_index=0, conversion='centroids2corners')
         coords = 'corners'
-    elif not (coords in {'minmax', 'corners'}):
-        raise ValueError("Unexpected value for `coords`. Supported values are 'minmax', 'corners' and 'centroids'.")
-
+    
     # Compute the IoU.
-
-    # Compute the interesection areas.
-
+    
+    # Compute the intersection areas.
+    
     intersection_areas = intersection_area_(boxes1, boxes2, coords=coords, mode=mode)
-
-    m = boxes1.shape[0] # The number of boxes in `boxes1`
-    n = boxes2.shape[0] # The number of boxes in `boxes2`
-
+    
+    m = boxes1.shape[0]  # The number of boxes in `boxes1`
+    n = boxes2.shape[0]  # The number of boxes in `boxes2`
+    
     # Compute the union areas.
-
+    
     # Set the correct coordinate indices for the respective formats.
     if coords == 'corners':
         xmin = 0
@@ -361,24 +407,40 @@ def iou(boxes1, boxes2, coords='centroids', mode='outer_product', border_pixels=
         xmax = 1
         ymin = 2
         ymax = 3
-
+    else:
+        raise ValueError("Unexpected value for `coords`. Supported values are 'minmax', 'corners' and 'centroids'.")
+    
     if border_pixels == 'half':
         d = 0
     elif border_pixels == 'include':
-        d = 1 # If border pixels are supposed to belong to the bounding boxes, we have to add one pixel to any difference `xmax - xmin` or `ymax - ymin`.
+        d = 1  # If border pixels are supposed to belong to the bounding boxes, we have to add one pixel to any
+        # difference `xmax - xmin` or `ymax - ymin`.
     elif border_pixels == 'exclude':
-        d = -1 # If border pixels are not supposed to belong to the bounding boxes, we have to subtract one pixel from any difference `xmax - xmin` or `ymax - ymin`.
-
+        d = -1  # If border pixels are not supposed to belong to the bounding boxes, we have to subtract one pixel
+        # from any difference `xmax - xmin` or `ymax - ymin`.
+    else:
+        raise ValueError(
+            "Unexpected border pixels value. Supported values are 'half', "
+            "'include', and 'exclude'."
+        )
+    
     if mode == 'outer_product':
-
-        boxes1_areas = np.tile(np.expand_dims((boxes1[:,xmax] - boxes1[:,xmin] + d) * (boxes1[:,ymax] - boxes1[:,ymin] + d), axis=1), reps=(1,n))
-        boxes2_areas = np.tile(np.expand_dims((boxes2[:,xmax] - boxes2[:,xmin] + d) * (boxes2[:,ymax] - boxes2[:,ymin] + d), axis=0), reps=(m,1))
-
+        
+        boxes1_areas = np.tile(
+            np.expand_dims((boxes1[:, xmax] - boxes1[:, xmin] + d) * (boxes1[:, ymax] - boxes1[:, ymin] + d), axis=1),
+            reps=(1, n))
+        boxes2_areas = np.tile(
+            np.expand_dims((boxes2[:, xmax] - boxes2[:, xmin] + d) * (boxes2[:, ymax] - boxes2[:, ymin] + d), axis=0),
+            reps=(m, 1))
+    
     elif mode == 'element-wise':
-
-        boxes1_areas = (boxes1[:,xmax] - boxes1[:,xmin] + d) * (boxes1[:,ymax] - boxes1[:,ymin] + d)
-        boxes2_areas = (boxes2[:,xmax] - boxes2[:,xmin] + d) * (boxes2[:,ymax] - boxes2[:,ymin] + d)
-
+        
+        boxes1_areas = (boxes1[:, xmax] - boxes1[:, xmin] + d) * (boxes1[:, ymax] - boxes1[:, ymin] + d)
+        boxes2_areas = (boxes2[:, xmax] - boxes2[:, xmin] + d) * (boxes2[:, ymax] - boxes2[:, ymin] + d)
+    
+    else:
+        raise ValueError("`mode` must be one of 'outer_product' and 'element-wise', but got '{}'.".format(mode))
+    
     union_areas = boxes1_areas + boxes2_areas - intersection_areas
-
+    
     return intersection_areas / union_areas
