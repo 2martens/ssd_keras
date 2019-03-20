@@ -18,10 +18,13 @@ limitations under the License.
 """
 
 from __future__ import division
+
+from typing import Optional
+
 import tensorflow as tf
 
 
-def log_loss(y_true, y_pred):
+def log_loss(y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
     """
     Compute the softmax log loss.
 
@@ -49,9 +52,9 @@ class SSDLoss:
     """
     
     def __init__(self,
-                 neg_pos_ratio=3,
-                 n_neg_min=0,
-                 alpha=1.0):
+                 neg_pos_ratio: Optional[int] = 3,
+                 n_neg_min: Optional[int] = 0,
+                 alpha: Optional[float] = 1.0):
         """
         Arguments:
             neg_pos_ratio (int, optional): The maximum ratio of negative (i.e. background)
@@ -74,7 +77,7 @@ class SSDLoss:
         self.n_neg_min = n_neg_min
         self.alpha = alpha
     
-    def smooth_L1_loss(self, y_true, y_pred):
+    def smooth_L1_loss(self, y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
         """
         Compute smooth L1 loss, see references.
 
@@ -98,7 +101,7 @@ class SSDLoss:
         l1_loss = tf.where(tf.less(absolute_loss, 1.0), square_loss, absolute_loss - 0.5)
         return tf.reduce_sum(l1_loss, axis=-1)
 
-    def compute_loss(self, y_true, y_pred):
+    def compute_loss(self, y_true: tf.Tensor, y_pred: tf.Tensor) -> tf.Tensor:
         """
         Compute the loss of the SSD model prediction against the ground truth.
 
