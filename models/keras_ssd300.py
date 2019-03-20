@@ -103,12 +103,12 @@ def ssd_300(image_size,
             This allows you to set the aspect ratios for each predictor layer individually, which is the case for the
             original SSD300 implementation. If a list is passed, it overrides `aspect_ratios_global`.
         two_boxes_for_ar1 (bool, optional): Only relevant for aspect ratio lists that contain 1. Will be ignored
-        otherwise.
+            otherwise.
             If `True`, two anchor boxes will be generated for aspect ratio 1. The first will be generated
             using the scaling factor for the respective layer, the second one will be generated using
             geometric mean of said scaling factor and next bigger scaling factor.
         steps (list, optional): `None` or a list with as many elements as there are predictor layers. The elements
-        can be
+            can be
             either ints/floats or tuples of two ints/floats. These numbers represent for each predictor layer how many
             pixels apart the anchor box center points should be vertically and horizontally along the spatial grid over
             the image. If the list contains ints/floats, then that value will be used for both spatial dimensions.
@@ -116,7 +116,7 @@ def ssd_300(image_size,
             If no steps are provided, then they will be computed such that the anchor box center points will form an
             equidistant grid within the image dimensions.
         offsets (list, optional): `None` or a list with as many elements as there are predictor layers. The elements
-        can be
+            can be
             either floats or tuples of two floats. These numbers represent for each predictor layer how many
             pixels from the top and left boarders of the image the top-most and left-most anchor box center points
             should be
@@ -234,10 +234,10 @@ def ssd_300(image_size,
     if np.any(variances <= 0):
         raise ValueError("All variances must be >0, but the variances given are {}".format(variances))
     
-    if (not (steps is None)) and (len(steps) != n_predictor_layers):
+    if (steps is not None) and (len(steps) != n_predictor_layers):
         raise ValueError("You must provide at least one step value per predictor layer.")
     
-    if (not (offsets is None)) and (len(offsets) != n_predictor_layers):
+    if (offsets is not None) and (len(offsets) != n_predictor_layers):
         raise ValueError("You must provide at least one offset value per predictor layer.")
     
     ############################################################################
@@ -302,10 +302,10 @@ def ssd_300(image_size,
     # The following identity layer is only needed so that the subsequent lambda layers can be optional.
     x1 = tf.keras.layers.Lambda(identity_layer, output_shape=(img_height, img_width, img_channels),
                                 name='identity_layer')(x)
-    if not (subtract_mean is None):
+    if subtract_mean is not None:
         x1 = tf.keras.layers.Lambda(input_mean_normalization, output_shape=(img_height, img_width, img_channels),
                                     name='input_mean_normalization')(x1)
-    if not (divide_by_stddev is None):
+    if divide_by_stddev is not None:
         x1 = tf.keras.layers.Lambda(input_stddev_normalization, output_shape=(img_height, img_width, img_channels),
                                     name='input_stddev_normalization')(x1)
     if swap_channels:
@@ -386,7 +386,7 @@ def ssd_300(image_size,
     
     # Build the convolutional predictor layers on top of the base network
     
-    # We precidt `n_classes` confidence values for each box, hence the confidence predictors have depth `n_boxes *
+    # We predict `n_classes` confidence values for each box, hence the confidence predictors have depth `n_boxes *
     # n_classes`
     # Output shape of the confidence layers: `(batch, height, width, n_boxes * n_classes)`
     conv4_3_norm_mbox_conf = tf.keras.layers.Conv2D(n_boxes[0] * n_classes, (3, 3), padding='same',
@@ -395,8 +395,8 @@ def ssd_300(image_size,
                                                     name='conv4_3_norm_mbox_conf')(conv4_3_norm)
     fc7_mbox_conf = tf.keras.layers.Conv2D(n_boxes[1] * n_classes, (3, 3), padding='same',
                                            kernel_initializer='he_normal',
-                                           kernel_regularizer=tf.keras.regularizers.l2(l2_reg), name='fc7_mbox_conf')(
-        fc7)
+                                           kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
+                                           name='fc7_mbox_conf')(fc7)
     conv6_2_mbox_conf = tf.keras.layers.Conv2D(n_boxes[2] * n_classes, (3, 3), padding='same',
                                                kernel_initializer='he_normal',
                                                kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
