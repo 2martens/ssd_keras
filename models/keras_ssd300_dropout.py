@@ -23,6 +23,9 @@ dropout layers after each fully connected layer.
 from __future__ import division
 
 from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
 
 import numpy as np
 import tensorflow as tf
@@ -33,33 +36,34 @@ from twomartens.masterthesis.ssd_keras.keras_layers import keras_layer_DecodeDet
 from twomartens.masterthesis.ssd_keras.keras_layers import keras_layer_L2Normalization
 
 K = tf.keras.backend
+Decimal = Union[int, float]
 
 
-def ssd_300_dropout(image_size,
-                    n_classes,
-                    mode='training',
-                    l2_regularization=0.0005,
+def ssd_300_dropout(image_size: Tuple[int, int, int],
+                    n_classes: int,
+                    mode: Optional[str] = 'training',
+                    l2_regularization: Optional[float] = 0.0005,
                     dropout_rate: Optional[float] = 0.5,
-                    min_scale=None,
-                    max_scale=None,
-                    scales=None,
-                    aspect_ratios_global=None,
-                    aspect_ratios_per_layer=None,
-                    two_boxes_for_ar1=True,
-                    steps=None,
-                    offsets=None,
-                    clip_boxes=False,
-                    variances=None,
-                    coords='centroids',
-                    normalize_coords=True,
-                    subtract_mean=None,
-                    divide_by_stddev=None,
-                    swap_channels=None,
-                    confidence_thresh=0.01,
-                    iou_threshold=0.45,
-                    top_k=200,
-                    nms_max_output_size=400,
-                    return_predictor_sizes=False):
+                    min_scale: Optional[float] = None,
+                    max_scale: Optional[float] = None,
+                    scales: Optional[Sequence[float]] = None,
+                    aspect_ratios_global: Optional[Sequence[float]] = None,
+                    aspect_ratios_per_layer: Optional[Sequence[Sequence[float]]] = None,
+                    two_boxes_for_ar1: bool = True,
+                    steps: Optional[Sequence[Union[Decimal, Tuple[Decimal, Decimal]]]] = None,
+                    offsets: Optional[Sequence[Union[float, Tuple[float, float]]]] = None,
+                    clip_boxes: bool = False,
+                    variances: Optional[Sequence[float]] = None,
+                    coords: str = 'centroids',
+                    normalize_coords: bool = True,
+                    subtract_mean: Optional[Sequence[Decimal]] = None,
+                    divide_by_stddev: Optional[Sequence[Decimal]] = None,
+                    swap_channels: Optional[Union[bool, Sequence[int]]] = None,
+                    confidence_thresh: float = 0.01,
+                    iou_threshold: float = 0.45,
+                    top_k: int = 200,
+                    nms_max_output_size: int = 400,
+                    return_predictor_sizes: bool = False):
     """
     Build a Keras model with SSD300 architecture, see references.
 
