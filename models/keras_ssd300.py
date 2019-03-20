@@ -19,6 +19,11 @@ limitations under the License.
 
 from __future__ import division
 
+from typing import Optional
+from typing import Sequence
+from typing import Tuple
+from typing import Union
+
 import numpy as np
 import tensorflow as tf
 
@@ -28,32 +33,33 @@ from twomartens.masterthesis.ssd_keras.keras_layers import keras_layer_DecodeDet
 from twomartens.masterthesis.ssd_keras.keras_layers import keras_layer_L2Normalization
 
 K = tf.keras.backend
+Decimal = Union[int, float]
 
 
-def ssd_300(image_size,
-            n_classes,
-            mode='training',
-            l2_regularization=0.0005,
-            min_scale=None,
-            max_scale=None,
-            scales=None,
-            aspect_ratios_global=None,
-            aspect_ratios_per_layer=None,
-            two_boxes_for_ar1=True,
-            steps=None,
-            offsets=None,
-            clip_boxes=False,
-            variances=None,
-            coords='centroids',
-            normalize_coords=True,
-            subtract_mean=None,
-            divide_by_stddev=None,
-            swap_channels=None,
-            confidence_thresh=0.01,
-            iou_threshold=0.45,
-            top_k=200,
-            nms_max_output_size=400,
-            return_predictor_sizes=False):
+def ssd_300(image_size: Tuple[int, int, int],
+            n_classes: int,
+            mode: Optional[str] = 'training',
+            l2_regularization: Optional[float] = 0.0005,
+            min_scale: Optional[float] = None,
+            max_scale: Optional[float] = None,
+            scales: Optional[Sequence[float]] = None,
+            aspect_ratios_global: Optional[Sequence[float]] = None,
+            aspect_ratios_per_layer: Optional[Sequence[Sequence[float]]] = None,
+            two_boxes_for_ar1: bool = True,
+            steps: Optional[Sequence[Union[Decimal, Tuple[Decimal, Decimal]]]] = None,
+            offsets: Optional[Sequence[Union[float, Tuple[float, float]]]] = None,
+            clip_boxes: bool = False,
+            variances: Optional[Sequence[float]] = None,
+            coords: str = 'centroids',
+            normalize_coords: bool = True,
+            subtract_mean: Optional[Sequence[Decimal]] = None,
+            divide_by_stddev: Optional[Sequence[Decimal]] = None,
+            swap_channels: Optional[Union[bool, Sequence[int]]] = None,
+            confidence_thresh: float = 0.01,
+            iou_threshold: float = 0.45,
+            top_k: int = 200,
+            nms_max_output_size: int = 400,
+            return_predictor_sizes: bool = False):
     """
     Build a Keras model with SSD300 architecture, see references.
 
@@ -130,13 +136,13 @@ def ssd_300(image_size,
         variances (list, optional): A list of 4 floats >0. The anchor box offset for each coordinate will be divided by
             its respective variance value.
         coords (str, optional): The box coordinate format to be used internally by the model (i.e. this is not the
-        input format
+            input format
             of the ground truth labels). Can be either 'centroids' for the format `(cx, cy, w, h)` (box center
             coordinates, width,
             and height), 'minmax' for the format `(xmin, xmax, ymin, ymax)`, or 'corners' for the format `(xmin,
             ymin, xmax, ymax)`.
         normalize_coords (bool, optional): Set to `True` if the model is supposed to use relative instead of absolute
-        coordinates,
+            coordinates,
             i.e. if the model predicts box coordinates within [0,1] instead of absolute coordinates.
         subtract_mean (array-like, optional): `None` or an array-like object of integers or floating point values
             of any shape that is broadcast-compatible with the image shape. The elements of this array will be
@@ -147,7 +153,7 @@ def ssd_300(image_size,
             intensity values will be divided by the elements of this array. For example, pass a list
             of three integers to perform per-channel standard deviation normalization for color images.
         swap_channels (list, optional): Either `False` or a list of integers representing the desired order in which
-        the input
+            the input
             image channels should be swapped.
         confidence_thresh (float, optional): A float in [0,1), the minimum classification confidence in a specific
             positive class in order to be considered for the non-maximum suppression stage for the respective class.
@@ -157,13 +163,13 @@ def ssd_300(image_size,
             confidence
             thresholding stage.
         iou_threshold (float, optional): A float in [0,1]. All boxes that have a Jaccard similarity of greater than
-        `iou_threshold`
+            `iou_threshold`
             with a locally maximal box will be removed from the set of predictions for a given class, where 'maximal'
             refers to the box's confidence score.
         top_k (int, optional): The number of highest scoring predictions to be kept for each batch item after the
             non-maximum suppression stage.
         nms_max_output_size (int, optional): The maximal number of predictions that will be left over after the NMS
-        stage.
+            stage.
         return_predictor_sizes (bool, optional): If `True`, this function not only returns the model, but also
             a list containing the spatial dimensions of the predictor layers. This isn't strictly necessary since
             you can always get their sizes easily via the Keras API, but it's convenient and less error-prone
@@ -276,16 +282,16 @@ def ssd_300(image_size,
     # Define functions for the Lambda layers below.
     ############################################################################
     
-    def identity_layer(tensor):
+    def _identity_layer(tensor):
         return tensor
     
-    def input_mean_normalization(tensor):
+    def _input_mean_normalization(tensor):
         return tensor - np.array(subtract_mean)
     
-    def input_stddev_normalization(tensor):
+    def _input_stddev_normalization(tensor):
         return tensor / np.array(divide_by_stddev)
     
-    def input_channel_swap(tensor):
+    def _input_channel_swap(tensor):
         if len(swap_channels) == 3:
             return K.stack(
                 [tensor[..., swap_channels[0]], tensor[..., swap_channels[1]], tensor[..., swap_channels[2]]], axis=-1)
@@ -300,16 +306,16 @@ def ssd_300(image_size,
     x = tf.keras.layers.Input(shape=(img_height, img_width, img_channels))
     
     # The following identity layer is only needed so that the subsequent lambda layers can be optional.
-    x1 = tf.keras.layers.Lambda(identity_layer, output_shape=(img_height, img_width, img_channels),
+    x1 = tf.keras.layers.Lambda(_identity_layer, output_shape=(img_height, img_width, img_channels),
                                 name='identity_layer')(x)
     if subtract_mean is not None:
-        x1 = tf.keras.layers.Lambda(input_mean_normalization, output_shape=(img_height, img_width, img_channels),
+        x1 = tf.keras.layers.Lambda(_input_mean_normalization, output_shape=(img_height, img_width, img_channels),
                                     name='input_mean_normalization')(x1)
     if divide_by_stddev is not None:
-        x1 = tf.keras.layers.Lambda(input_stddev_normalization, output_shape=(img_height, img_width, img_channels),
+        x1 = tf.keras.layers.Lambda(_input_stddev_normalization, output_shape=(img_height, img_width, img_channels),
                                     name='input_stddev_normalization')(x1)
     if swap_channels:
-        x1 = tf.keras.layers.Lambda(input_channel_swap, output_shape=(img_height, img_width, img_channels),
+        x1 = tf.keras.layers.Lambda(_input_channel_swap, output_shape=(img_height, img_width, img_channels),
                                     name='input_channel_swap')(x1)
     
     conv1_1 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer='he_normal',
