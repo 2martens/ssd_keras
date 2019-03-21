@@ -363,11 +363,13 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
     fc6 = tf.keras.layers.Conv2D(1024, (3, 3), dilation_rate=(6, 6), activation='relu', padding='same',
                                  kernel_initializer='he_normal', kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
                                  name='fc6')(pool5)
-    dropout_1 = tf.keras.layers.Dropout(rate=dropout_rate)(fc6)
+    # make Keras believe we are always in training mode
+    training_mode = True
+    dropout_1 = tf.keras.layers.Dropout(rate=dropout_rate)(fc6, training_mode)
     
     fc7 = tf.keras.layers.Conv2D(1024, (1, 1), activation='relu', padding='same', kernel_initializer='he_normal',
                                  kernel_regularizer=tf.keras.regularizers.l2(l2_reg), name='fc7')(dropout_1)
-    dropout_2 = tf.keras.layers.Dropout(rate=dropout_rate)(fc7)
+    dropout_2 = tf.keras.layers.Dropout(rate=dropout_rate)(fc7, training_mode)
     
     conv6_1 = tf.keras.layers.Conv2D(256, (1, 1), activation='relu', padding='same', kernel_initializer='he_normal',
                                      kernel_regularizer=tf.keras.regularizers.l2(l2_reg), name='conv6_1')(dropout_2)
