@@ -79,11 +79,11 @@ class SSDRandomCrop:
         
         # Filters out boxes whose center point does not lie within the
         # chosen patches.
-        self.box_filter = geometric_ops.BoxFilter(check_overlap=True,
-                                                  check_min_area=False,
-                                                  check_degenerate=False,
-                                                  overlap_criterion='center_point',
-                                                  labels_format=self.labels_format)
+        self.box_filter = validation_utils.BoxFilter(check_overlap=True,
+                                                     check_min_area=False,
+                                                     check_degenerate=False,
+                                                     overlap_criterion='center_point',
+                                                     labels_format=self.labels_format)
         
         # Determines whether a given patch is considered a valid patch.
         # Defines a patch to be valid if at least one ground truth bounding box
@@ -261,10 +261,10 @@ class SSDDataAugmentation:
         # Resizing the images could lead the boxes to becomes smaller. For boxes that are already
         # pretty small, that might result in boxes with height and/or width zero, which we obviously
         # cannot allow.
-        self.box_filter = geometric_ops.BoxFilter(check_overlap=False,
-                                                  check_min_area=False,
-                                                  check_degenerate=True,
-                                                  labels_format=self.labels_format)
+        self.box_filter = validation_utils.BoxFilter(check_overlap=False,
+                                                     check_min_area=False,
+                                                     check_degenerate=True,
+                                                     labels_format=self.labels_format)
         
         self.resize = geometric_ops.ResizeRandomInterp(height=img_height,
                                                        width=img_width,
