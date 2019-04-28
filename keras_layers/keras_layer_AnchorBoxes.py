@@ -276,8 +276,9 @@ class AnchorBoxes(tf.keras.layers.Layer):
         return boxes_tensor
     
     def compute_output_shape(self, input_shape):
-        batch_size, feature_map_height, feature_map_width, feature_map_channels = input_shape
-        return batch_size, feature_map_height, feature_map_width, self.n_boxes, 8
+        batch_size, feature_map_height, \
+            feature_map_width, feature_map_channels = tuple(tf.TensorShape(input_shape).as_list())
+        return tf.TensorShape([batch_size, feature_map_height, feature_map_width, self.n_boxes, 8])
     
     def get_config(self):
         config = {
