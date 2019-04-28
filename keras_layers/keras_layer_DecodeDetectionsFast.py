@@ -274,8 +274,8 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         return output_tensor
     
     def compute_output_shape(self, input_shape):
-        batch_size, n_boxes, last_axis = input_shape
-        return batch_size, self.tf_top_k, 6  # Last axis: (class_ID, confidence, 4 box coordinates)
+        batch_size, n_boxes, last_axis = tuple(tf.TensorShape(input_shape).as_list())
+        return tf.TensorShape([batch_size, self.tf_top_k, 6])  # Last axis: (class_ID, confidence, 4 box coordinates)
     
     def get_config(self):
         config = {
