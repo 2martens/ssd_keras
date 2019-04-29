@@ -185,7 +185,8 @@ class AnchorBoxes(tf.keras.layers.Layer):
         wh_list = np.array(wh_list)
         
         # We need the shape of the input tensor
-        batch_size, feature_map_height, feature_map_width, feature_map_channels = x._keras_shape
+        batch_size, feature_map_height, \
+            feature_map_width, feature_map_channels = tuple(tf.TensorShape(tf.shape(x)).as_list())
         
         # Compute the grid of box center points. They are identical for all aspect ratios.
         
