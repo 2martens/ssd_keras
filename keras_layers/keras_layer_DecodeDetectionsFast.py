@@ -262,10 +262,9 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
             return top_k_boxes
         
         # Iterate `filter_predictions()` over all batch items.
-        output_tensor = tf.map_fn(fn=lambda x: filter_predictions(x),
+        output_tensor = tf.map_fn(fn=tf.contrib.eager.defun(filter_predictions),
                                   elems=y_pred,
                                   dtype=None,
-                                  parallel_iterations=128,
                                   back_prop=False,
                                   swap_memory=False,
                                   infer_shape=True,
