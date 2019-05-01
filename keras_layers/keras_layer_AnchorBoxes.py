@@ -146,7 +146,8 @@ class AnchorBoxes(tf.keras.layers.Layer):
         self.input_spec = [tf.keras.layers.InputSpec(shape=input_shape)]
         super(AnchorBoxes, self).build(input_shape)
     
-    def call(self, x: tf.Tensor, mask=None):
+    @tf.contrib.eager.defun
+    def call(self, x: tf.Tensor):
         """
         Return an anchor box tensor based on the shape of the input tensor.
 
@@ -161,7 +162,6 @@ class AnchorBoxes(tf.keras.layers.Layer):
             x (tensor): 4D tensor of shape `(batch, channels, height, width)` if `dim_ordering = 'th'`
                 or `(batch, height, width, channels)` if `dim_ordering = 'tf'`. The input for this
                 layer must be the output of the localization predictor layer.
-            mask: the mask
         """
         
         # Compute box width and height for each aspect ratio
