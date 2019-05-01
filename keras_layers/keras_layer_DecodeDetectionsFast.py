@@ -141,7 +141,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         # Extract the predicted class IDs as the indices of the highest confidence values.
         class_ids = tf.expand_dims(tf.to_float(tf.argmax(y_pred[..., :-12], axis=-1)), axis=-1)
         # Extract the confidences of the maximal classes.
-        confidences = tf.reduce_max(y_pred[..., :-12], axis=-1, keep_dims=True)
+        confidences = tf.reduce_max(y_pred[..., :-12], axis=-1, keepdims=True)
         
         # Convert anchor box offsets to image offsets.
         cx = y_pred[..., -12] * y_pred[..., -4] * y_pred[..., -6] + y_pred[
