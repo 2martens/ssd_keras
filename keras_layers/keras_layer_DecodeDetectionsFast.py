@@ -122,7 +122,8 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
     def build(self, input_shape):
         self.input_spec = [tf.keras.layers.InputSpec(shape=input_shape)]
         super(DecodeDetectionsFast, self).build(input_shape)
-    
+
+    @tf.contrib.eager.defun
     def call(self, y_pred, mask=None):
         """
         Returns:
