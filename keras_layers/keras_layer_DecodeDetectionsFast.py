@@ -124,7 +124,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         super(DecodeDetectionsFast, self).build(input_shape)
 
     @tf.contrib.eager.defun
-    def call(self, y_pred, mask=None):
+    def call(self, y_pred):
         """
         Returns:
             3D tensor of shape `(batch_size, top_k, 6)`. The second axis is zero-padded
