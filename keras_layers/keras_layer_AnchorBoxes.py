@@ -146,7 +146,6 @@ class AnchorBoxes(tf.keras.layers.Layer):
         self.input_spec = [tf.keras.layers.InputSpec(shape=input_shape)]
         super(AnchorBoxes, self).build(input_shape)
     
-    @tf.contrib.eager.defun
     def call(self, x: tf.Tensor):
         """
         Return an anchor box tensor based on the shape of the input tensor.
