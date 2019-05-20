@@ -40,6 +40,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
     
     def __init__(self,
                  confidence_thresh=0.01,
+                 entropy_thresh=0.5,
                  iou_threshold=0.45,
                  top_k=200,
                  nms_max_output_size=400,
@@ -59,6 +60,8 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
                 stage, while a larger value will result in a larger part of the selection process happening in the
                 confidence
                 thresholding stage.
+            entropy_thresh (float, optional): A float in [0,1), describing the upper limit for the entropy. Predictions
+                with higher entropy will be filtered out.
             iou_threshold (float, optional): A float in [0,1]. All boxes with a Jaccard similarity of greater than
             `iou_threshold`
                 with a locally maximal box will be removed from the set of predictions for a given class,
@@ -100,6 +103,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         
         # We need these members for the config.
         self.confidence_thresh = confidence_thresh
+        self.entropy_thresh = entropy_thresh
         self.iou_threshold = iou_threshold
         self.top_k = top_k
         self.normalize_coords = normalize_coords
@@ -110,6 +114,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         
         # We need these members for TensorFlow.
         self.tf_confidence_thresh = tf.constant(self.confidence_thresh, name='confidence_thresh')
+        self.tf_entropy_thresh = tf.constant(self.entropy_thresh, name='entropy_thresh')
         self.tf_iou_threshold = tf.constant(self.iou_threshold, name='iou_threshold')
         self.tf_top_k = tf.constant(self.top_k, name='top_k')
         self.tf_normalize_coords = tf.constant(self.normalize_coords, name='normalize_coords')
@@ -126,10 +131,10 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
     def call(self, y_pred):
         """
         Returns:
-            3D tensor of shape `(batch_size, top_k, 6)`. The second axis is zero-padded
+            3D tensor of shape `(batch_size, top_k, 7)`. The second axis is zero-padded
             to always yield `top_k` predictions per batch item. The last axis contains
             the coordinates for each predicted box in the format
-            `[class_id, confidence, xmin, ymin, xmax, ymax]`.
+            `[class_id, confidence, entropy, xmin, ymin, xmax, ymax]`.
         """
         
         #####################################################################################
@@ -141,6 +146,8 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         class_ids = tf.expand_dims(tf.cast(tf.argmax(y_pred[..., :-12], axis=-1), dtype=tf.float32), axis=-1)
         # Extract the confidences of the maximal classes.
         confidences = tf.reduce_max(y_pred[..., :-12], axis=-1, keepdims=True)
+        # calculate entropy
+        entropy = -tf.reduce_sum(y_pred[..., :-12] * tf.log(y_pred[..., :-12]), axis=-1, keepdims=True)
         
         # Convert anchor box offsets to image offsets.
         cx = y_pred[..., -12] * y_pred[..., -4] * y_pred[..., -6] + y_pred[
@@ -175,11 +182,11 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         
         # Concatenate the one-hot class confidences and the converted box coordinates to form the decoded predictions
         # tensor.
-        y_pred = tf.concat(values=[class_ids, confidences, xmin, ymin, xmax, ymax], axis=-1)
+        y_pred = tf.concat(values=[class_ids, confidences, entropy, xmin, ymin, xmax, ymax], axis=-1)
         
-        #####################################################################################
-        # 2. Perform confidence thresholding, non-maximum suppression, and top-k filtering.
-        #####################################################################################
+        ###############################################################################################
+        # 2. Perform entropy and confidence thresholding, non-maximum suppression, and top-k filtering.
+        ###############################################################################################
         
         batch_size = tf.shape(y_pred)[0]  # Output dtype: tf.int32
         n_boxes = tf.shape(y_pred)[1]
@@ -187,6 +194,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
         class_indices = tf.range(1, n_classes)
         
         # Create a function that filters the predictions for the given batch item. Specifically, it performs:
+        # - entropy thresholding
         # - confidence thresholding
         # - non-maximum suppression (NMS)
         # - top-k filtering
@@ -196,18 +204,31 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
             predictions = tf.boolean_mask(tensor=batch_item,
                                           mask=positive_boxes)
             
-            def perform_confidence_thresholding():
-                # Apply confidence thresholding.
-                threshold_met = predictions[:, 1] > self.tf_confidence_thresh
+            def perform_entropy_thresholding():
+                # Apply entropy thresholding.
+                threshold_met = predictions[:, 2] < self.tf_entropy_thresh
                 return tf.boolean_mask(tensor=predictions,
                                        mask=threshold_met)
             
             def no_positive_boxes():
-                return tf.constant(value=0.0, shape=(1, 6))
+                return tf.constant(value=0.0, shape=(1, 7))
             
-            # If there are any positive predictions, perform confidence thresholding.
-            predictions_conf_thresh = tf.cond(tf.equal(tf.size(predictions), 0), no_positive_boxes,
-                                              perform_confidence_thresholding)
+            # If there are any positive predictions, perform entropy thresholding.
+            predictions_entropy_thresh = tf.cond(tf.equal(tf.size(predictions), 0), no_positive_boxes,
+                                                 perform_entropy_thresholding)
+            
+            def perform_confidence_thresholding():
+                # Apply confidence thresholding.
+                threshold_met = predictions_entropy_thresh[:, 1] > self.tf_confidence_thresh
+                return tf.boolean_mask(tensor=predictions_entropy_thresh,
+                                       mask=threshold_met)
+            
+            def no_low_entropy_predictions():
+                return tf.constant(value=0.0, shape=(1, 7))
+            
+            # If any boxes made the entropy threshold, perform confidence thresholding.
+            predictions_conf_thresh = tf.cond(tf.equal(tf.size(predictions_entropy_thresh), 0),
+                                              no_low_entropy_predictions, perform_confidence_thresholding)
             
             def perform_nms():
                 scores = predictions_conf_thresh[..., 1]
@@ -230,7 +251,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
                 return maxima
             
             def no_confident_predictions():
-                return tf.constant(value=0.0, shape=(1, 6))
+                return tf.constant(value=0.0, shape=(1, 7))
             
             # If any boxes made the threshold, perform NMS.
             predictions_nms = tf.cond(tf.equal(tf.size(predictions_conf_thresh), 0), no_confident_predictions,
@@ -274,11 +295,13 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
     
     def compute_output_shape(self, input_shape):
         batch_size, n_boxes, last_axis = tuple(tf.TensorShape(input_shape).as_list())
-        return tf.TensorShape([batch_size, self.top_k, 6])  # Last axis: (class_ID, confidence, 4 box coordinates)
+        # Last axis: (class_ID, confidence, entropy, 4 box coordinates)
+        return tf.TensorShape([batch_size, self.top_k, 7])
     
     def get_config(self):
         config = {
             'confidence_thresh': self.confidence_thresh,
+            'entropy_thresh': self.entropy_thresh,
             'iou_threshold': self.iou_threshold,
             'top_k': self.top_k,
             'nms_max_output_size': self.nms_max_output_size,
