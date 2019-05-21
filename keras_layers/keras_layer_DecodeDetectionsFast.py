@@ -206,7 +206,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
             
             def perform_entropy_thresholding():
                 # Apply entropy thresholding.
-                threshold_met = predictions[:, 2] < self.tf_entropy_thresh
+                threshold_met = predictions[:, 2] <= self.tf_entropy_thresh
                 return tf.boolean_mask(tensor=predictions,
                                        mask=threshold_met)
             
