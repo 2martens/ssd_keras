@@ -39,8 +39,8 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
     """
     
     def __init__(self,
-                 confidence_thresh=0.01,
-                 entropy_thresh=0.5,
+                 confidence_thresh=0.5,
+                 entropy_thresh=2.87,
                  iou_threshold=0.45,
                  top_k=200,
                  nms_max_output_size=400,
@@ -60,7 +60,7 @@ class DecodeDetectionsFast(tf.keras.layers.Layer):
                 stage, while a larger value will result in a larger part of the selection process happening in the
                 confidence
                 thresholding stage.
-            entropy_thresh (float, optional): A float in [0,1), describing the upper limit for the entropy. Predictions
+            entropy_thresh (float, optional): A float describing the upper limit for the entropy. Predictions
                 with higher entropy will be filtered out.
             iou_threshold (float, optional): A float in [0,1]. All boxes with a Jaccard similarity of greater than
             `iou_threshold`

@@ -300,7 +300,7 @@ def decode_detections(y_pred,
 
 def decode_detections_fast(y_pred,
                            confidence_thresh=0.5,
-                           entropy_thresh=0.5,
+                           entropy_thresh=2.87,
                            iou_threshold=0.45,
                            top_k='all',
                            input_coords='centroids',
@@ -333,7 +333,7 @@ def decode_detections_fast(y_pred,
             goal to combat the inevitably many duplicates that an SSD will produce, the subsequent non-maximum
             suppression
             stage will take care of those.
-        entropy_thresh (float, optional): A float in [0,1), describing the upper limit for the entropy. Predictions
+        entropy_thresh (float, optional): A float describing the upper limit for the entropy. Predictions
                 with higher entropy will be filtered out.
         iou_threshold (float, optional): `None` or a float in [0,1]. If `None`, no non-maximum suppression will be
             performed. If not `None`, greedy NMS will be performed after the confidence thresholding stage, meaning
