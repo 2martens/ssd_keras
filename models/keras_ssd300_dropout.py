@@ -159,8 +159,7 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
             intensity values will be divided by the elements of this array. For example, pass a list
             of three integers to perform per-channel standard deviation normalization for color images.
         swap_channels (list, optional): Either `False` or a list of integers representing the desired order in which
-        the input
-            image channels should be swapped.
+            the input image channels should be swapped.
         confidence_thresh (float, optional): A float in [0,1), the minimum classification confidence in a specific
             positive class in order to be considered for the non-maximum suppression stage for the respective class.
             A lower value will result in a larger part of the selection process being done by the non-maximum
@@ -169,13 +168,13 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
             confidence
             thresholding stage.
         iou_threshold (float, optional): A float in [0,1]. All boxes that have a Jaccard similarity of greater than
-        `iou_threshold`
+            `iou_threshold`
             with a locally maximal box will be removed from the set of predictions for a given class, where 'maximal'
             refers to the box's confidence score.
         top_k (int, optional): The number of highest scoring predictions to be kept for each batch item after the
             non-maximum suppression stage.
         nms_max_output_size (int, optional): The maximal number of predictions that will be left over after the NMS
-        stage.
+            stage.
         return_predictor_sizes (bool, optional): If `True`, this function not only returns the model, but also
             a list containing the spatial dimensions of the predictor layers. This isn't strictly necessary since
             you can always get their sizes easily via the Keras API, but it's convenient and less error-prone
