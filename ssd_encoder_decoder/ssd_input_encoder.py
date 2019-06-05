@@ -95,12 +95,12 @@ class SSDInputEncoder:
                 that the resulting anchor box shapes very roughly correspond to the shapes of the objects you are
                 trying to detect.
             two_boxes_for_ar1 (bool, optional): Only relevant for aspect ratios lists that contain 1. Will be ignored
-            otherwise.
+                otherwise.
                 If `True`, two anchor boxes will be generated for aspect ratio 1. The first will be generated
                 using the scaling factor for the respective layer, the second one will be generated using
                 geometric mean of said scaling factor and next bigger scaling factor.
             steps (list, optional): `None` or a list with as many elements as there are predictor layers. The
-            elements can be
+                elements can be
                 either ints/floats or tuples of two ints/floats. These numbers represent for each predictor layer how
                 many pixels apart the anchor box center points should be vertically and horizontally along the spatial
                 grid over
@@ -109,7 +109,7 @@ class SSDInputEncoder:
                 If no steps are provided, then they will be computed such that the anchor box center points will form an
                 equidistant grid within the image dimensions.
             offsets (list, optional): `None` or a list with as many elements as there are predictor layers. The
-            elements can be
+                elements can be
                 either floats or tuples of two floats. These numbers represent for each predictor layer how many
                 pixels from the top and left boarders of the image the top-most and left-most anchor box center
                 points should be
@@ -121,7 +121,7 @@ class SSDInputEncoder:
                 the step size.
             clip_boxes (bool, optional): If `True`, limits the anchor box coordinates to stay within image boundaries.
             variances (list, optional): A list of 4 floats >0. The anchor box offset for each coordinate will be
-            divided by
+                divided by
                 its respective variance value.
             matching_type (str, optional): Can be either 'multi' or 'bipartite'. In 'bipartite' mode, each ground
             truth box will
@@ -430,7 +430,7 @@ class SSDInputEncoder:
                 similarities[:, matches[1]] = 0
             
             # Third: Now after the matching is done, all negative (background) anchor boxes that have
-            #        an IoU of `neg_iou_limit` or more with any ground truth box will be set to netral,
+            #        an IoU of `neg_iou_limit` or more with any ground truth box will be set to neutral,
             #        i.e. they will no longer be background boxes. These anchors are "too close" to a
             #        ground truth box to be valid background boxes.
             
