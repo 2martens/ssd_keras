@@ -597,12 +597,12 @@ def ssd_300(image_size: Tuple[int, int, int],
             "`mode` must be one of 'training', 'inference' or 'inference_fast', but received '{}'.".format(mode))
     
     if return_predictor_sizes:
-        predictor_sizes = np.array([conv4_3_norm_mbox_conf.shape()[1:3],
-                                    fc7_mbox_conf.shape()[1:3],
-                                    conv6_2_mbox_conf.shape()[1:3],
-                                    conv7_2_mbox_conf.shape()[1:3],
-                                    conv8_2_mbox_conf.shape()[1:3],
-                                    conv9_2_mbox_conf.shape()[1:3]])
+        predictor_sizes = np.array([conv4_3_norm_mbox_conf.shape[1:3],
+                                    fc7_mbox_conf.shape[1:3],
+                                    conv6_2_mbox_conf.shape[1:3],
+                                    conv7_2_mbox_conf.shape[1:3],
+                                    conv8_2_mbox_conf.shape[1:3],
+                                    conv9_2_mbox_conf.shape[1:3]])
         return model, predictor_sizes
     else:
         return model
