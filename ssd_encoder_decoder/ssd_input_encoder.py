@@ -545,8 +545,8 @@ class SSDInputEncoder:
         
         # Compute the step sizes, i.e. how far apart the anchor box center points will be vertically and horizontally.
         if this_steps is None:
-            step_height = self.img_height / feature_map_size[0]
-            step_width = self.img_width / feature_map_size[1]
+            step_height = self.img_height / int(feature_map_size[0])
+            step_width = self.img_width / int(feature_map_size[1])
         else:
             if isinstance(this_steps, (list, tuple)) and (len(this_steps) == 2):
                 step_height = this_steps[0]
