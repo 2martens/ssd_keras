@@ -567,17 +567,17 @@ class SSDInputEncoder:
                 offset_height = this_offsets
                 offset_width = this_offsets
         # Now that we have the offsets and step sizes, compute the grid of anchor box center points.
-        cy = np.linspace(offset_height * step_height, (offset_height + feature_map_size[0] - 1) * step_height,
-                         feature_map_size[0])
-        cx = np.linspace(offset_width * step_width, (offset_width + feature_map_size[1] - 1) * step_width,
-                         feature_map_size[1])
+        cy = np.linspace(offset_height * step_height, (offset_height + int(feature_map_size[0]) - 1) * step_height,
+                         int(feature_map_size[0]))
+        cx = np.linspace(offset_width * step_width, (offset_width + int(feature_map_size[1]) - 1) * step_width,
+                         int(feature_map_size[1]))
         cx_grid, cy_grid = np.meshgrid(cx, cy)
         cx_grid = np.expand_dims(cx_grid, -1)  # This is necessary for np.tile() to do what we want further down
         cy_grid = np.expand_dims(cy_grid, -1)  # This is necessary for np.tile() to do what we want further down
         
         # Create a 4D tensor template of shape `(feature_map_height, feature_map_width, n_boxes, 4)`
         # where the last dimension will contain `(cx, cy, w, h)`
-        boxes_tensor = np.zeros((feature_map_size[0], feature_map_size[1], n_boxes, 4))
+        boxes_tensor = np.zeros((int(feature_map_size[0]), int(feature_map_size[1]), n_boxes, 4))
         
         boxes_tensor[:, :, :, 0] = np.tile(cx_grid, (1, 1, n_boxes))  # Set cx
         boxes_tensor[:, :, :, 1] = np.tile(cy_grid, (1, 1, n_boxes))  # Set cy
