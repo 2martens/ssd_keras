@@ -332,7 +332,7 @@ class SSDInputEncoder:
         Returns:
             `y_encoded`, a 3D numpy array of shape `(batch_size, #boxes, #classes + 4 + 4 + 4)` that serves as the
             ground truth label tensor for training, where `#boxes` is the total number of boxes predicted by the
-            model per image, and the classes are one-hot-encoded. The four elements after the class vecotrs in
+            model per image, and the classes are one-hot-encoded. The four elements after the class vectors in
             the last axis are the box coordinates, the next four elements after that are just dummy elements, and
             the last four elements are the variances.
         """
