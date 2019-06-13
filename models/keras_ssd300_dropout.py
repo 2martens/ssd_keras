@@ -63,7 +63,9 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
                     iou_threshold: Optional[float] = 0.45,
                     top_k: Optional[int] = 200,
                     nms_max_output_size: Optional[int] = 400,
-                    return_predictor_sizes: Optional[bool] = False):
+                    return_predictor_sizes: Optional[bool] = False) -> Union[tf.keras.models.Model,
+                                                                             Tuple[tf.keras.models.Model,
+                                                                             np.ndarray]]:
     """
     Build a Keras model with SSD300 architecture, see references.
 
