@@ -85,6 +85,13 @@ class Resize:
         delta_h = self.out_height - new_height
         top, bottom = delta_h // 2, delta_h - (delta_h // 2)
         left, right = delta_w // 2, delta_w - (delta_w // 2)
+        
+        print((
+            f"top: {top}"
+            f"bottom: {bottom}"
+            f"left: {left}"
+            f"right: {right}"
+        ))
 
         color = [0, 0, 0]
         image_b = cv2.copyMakeBorder(image[:, :, 0], top, bottom, left, right,
