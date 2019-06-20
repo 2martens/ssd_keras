@@ -87,8 +87,13 @@ class Resize:
         left, right = delta_w // 2, delta_w - (delta_w // 2)
 
         color = [0, 0, 0]
-        image = cv2.copyMakeBorder(image, top, bottom, left, right,
-                                   cv2.BORDER_CONSTANT, value=color)
+        image_b = cv2.copyMakeBorder(image[:, :, 0], top, bottom, left, right,
+                                            cv2.BORDER_CONSTANT, value=color)
+        image_g = cv2.copyMakeBorder(image[:, :, 1], top, bottom, left, right,
+                                            cv2.BORDER_CONSTANT, value=color)
+        image_r = cv2.copyMakeBorder(image[:, :, 2], top, bottom, left, right,
+                                            cv2.BORDER_CONSTANT, value=color)
+        image = np.stack([image_b, image_g, image_r], axis=-1)
         
         if return_inverter:
             def inverter(_labels):
