@@ -19,6 +19,8 @@ limitations under the License.
 """
 
 from __future__ import division
+
+import imutils
 import numpy as np
 import cv2
 import random
@@ -30,6 +32,8 @@ from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d
 class Resize:
     """
     Resizes images to a specified height and width in pixels.
+    
+    The aspect ratio is kept.
     """
     
     def __init__(self,
@@ -72,9 +76,9 @@ class Resize:
         xmax = self.labels_format['xmax']
         ymax = self.labels_format['ymax']
         
-        image = cv2.resize(image,
-                           dsize=(self.out_width, self.out_height),
-                           interpolation=self.interpolation_mode)
+        image = imutils.resize(image,
+                               width=self.out_width, height=self.out_height,
+                               inter=self.interpolation_mode)
         
         if return_inverter:
             def inverter(_labels):
