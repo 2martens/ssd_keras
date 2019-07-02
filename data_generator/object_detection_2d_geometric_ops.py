@@ -32,8 +32,6 @@ from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d
 class Resize:
     """
     Resizes images to a specified height and width in pixels.
-    
-    The aspect ratio is kept.
     """
     
     def __init__(self,
@@ -76,45 +74,17 @@ class Resize:
         xmax = self.labels_format['xmax']
         ymax = self.labels_format['ymax']
         
-        if img_height > img_width:
-            image = imutils.resize(image,
-                                   height=self.out_height,
-                                   inter=self.interpolation_mode)
-        else:
-            image = imutils.resize(image,
-                                   width=self.out_width,
-                                   inter=self.interpolation_mode)
-        
-        new_height, new_width = image.shape[:2]
-
-        delta_w = self.out_width - new_width
-        delta_h = self.out_height - new_height
-        top, bottom = delta_h // 2, delta_h - (delta_h // 2)
-        left, right = delta_w // 2, delta_w - (delta_w // 2)
-
-        color = [0, 0, 0]
-        image_b = cv2.copyMakeBorder(image[:, :, 0], top, bottom, left, right,
-                                            cv2.BORDER_CONSTANT, value=color)
-        image_g = cv2.copyMakeBorder(image[:, :, 1], top, bottom, left, right,
-                                            cv2.BORDER_CONSTANT, value=color)
-        image_r = cv2.copyMakeBorder(image[:, :, 2], top, bottom, left, right,
-                                            cv2.BORDER_CONSTANT, value=color)
-        image = np.stack([image_b, image_g, image_r], axis=-1)
+        image = cv2.resize(image,
+                           dsize=(self.out_width, self.out_height),
+                           interpolation=self.interpolation_mode)
         
         if return_inverter:
             def inverter(_labels):
                 _labels = np.copy(_labels)
                 _labels[:, [ymin + 1, ymax + 1]] = np.round(
-                    (_labels[:, [ymin + 1, ymax + 1]] - delta_h // 2) * (img_height / new_height), decimals=0)
+                    _labels[:, [ymin + 1, ymax + 1]] * (img_height / self.out_height), decimals=0)
                 _labels[:, [xmin + 1, xmax + 1]] = np.round(
-                    (_labels[:, [xmin + 1, xmax + 1]] - delta_w // 2) * (img_width / new_width), decimals=0)
-                
-                # set all labels lower than zero or higher than height/width to be within
-                # image boundary
-                _labels[_labels[:, ymin + 1] < 0] = 0
-                _labels[_labels[:, xmin + 1] < 0] = 0
-                _labels[_labels[:, ymax + 1] >= img_height] = img_height - 1
-                _labels[_labels[:, xmax + 1] >= img_width] = img_width - 1
+                    _labels[:, [xmin + 1, xmax + 1]] * (img_width / self.out_width), decimals=0)
                 
                 return _labels
         
@@ -125,9 +95,9 @@ class Resize:
                 return image
         else:
             labels = np.copy(labels)
-            labels[:, [ymin, ymax]] = np.round(labels[:, [ymin, ymax]] * (new_height / img_height) + delta_h // 2,
+            labels[:, [ymin, ymax]] = np.round(labels[:, [ymin, ymax]] * (self.out_height / img_height),
                                                decimals=0)
-            labels[:, [xmin, xmax]] = np.round(labels[:, [xmin, xmax]] * (new_width / img_width) + delta_w // 2,
+            labels[:, [xmin, xmax]] = np.round(labels[:, [xmin, xmax]] * (self.out_width / img_width),
                                                decimals=0)
             
             if not (self.box_filter is None):
