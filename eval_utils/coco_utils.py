@@ -18,6 +18,8 @@ limitations under the License.
 """
 
 import json
+from typing import Tuple, Dict, List
+
 from tqdm import trange
 from math import ceil
 import sys
@@ -30,7 +32,7 @@ from twomartens.masterthesis.ssd_keras.ssd_encoder_decoder import ssd_output_dec
 from twomartens.masterthesis.ssd_keras.data_generator import object_detection_2d_misc_utils as misc_utils
 
 
-def get_coco_category_maps(annotations_file):
+def get_coco_category_maps(annotations_file) -> Tuple[Dict[int, int], Dict[int, int], Dict[int, str], List[str]]:
     """
     Builds dictionaries that map between MS COCO category IDs, transformed category IDs, and category names.
     The original MS COCO category IDs are not consecutive unfortunately: The 80 category IDs are spread
