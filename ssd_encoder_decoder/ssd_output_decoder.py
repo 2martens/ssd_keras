@@ -437,8 +437,8 @@ def decode_detections_fast(y_pred,
     for batch_item in y_pred_converted:  # For each image in the batch...
         boxes = batch_item[
             np.nonzero(batch_item[:, 0])]  # ...get all boxes that don't belong to the background class,...
-        boxes = boxes[boxes[:,
-                      2] <= entropy_thresh]  # ...then filter out those positive boxes for which the entropy is too high
+        # boxes = boxes[boxes[:,
+        #             2] <= entropy_thresh]  # ...then filter out those positive boxes for which the entropy is too high
         # and after that...
         boxes = boxes[boxes[:,
                       1] >= confidence_thresh]  # ...filter out the boxes for which the prediction
