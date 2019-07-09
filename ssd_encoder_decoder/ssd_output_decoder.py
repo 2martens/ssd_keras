@@ -124,7 +124,7 @@ def _greedy_nms2(predictions, iou_threshold=0.45, coords='corners', border_pixel
         boxes_left = np.delete(boxes_left, maximum_index, axis=0)  # Now remove the maximum box from `boxes_left`
         if boxes_left.shape[0] == 0:
             break  # If there are no boxes left after this step, break. Otherwise...
-        similarities = bounding_box_utils.iou(boxes_left[:, 2:], maximum_box[2:], coords=coords, mode='element-wise',
+        similarities = bounding_box_utils.iou(boxes_left[:, 3:], maximum_box[3:], coords=coords, mode='element-wise',
                                               border_pixels=border_pixels)  # ...compare (IoU) the other left over
         # boxes to the maximum box...
         boxes_left = boxes_left[
