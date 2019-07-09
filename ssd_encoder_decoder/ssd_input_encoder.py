@@ -636,7 +636,7 @@ class SSDInputEncoder:
 
         Arguments:
             batch_size (int): The batch size.
-            diagnostics (bool, optional): See the documnentation for `generate_anchor_boxes()`. The diagnostic output
+            diagnostics (bool, optional): See the documentation for `generate_anchor_boxes()`. The diagnostic output
                 here is similar, just for all predictor conv layers.
 
         Returns:
