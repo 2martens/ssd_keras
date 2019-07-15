@@ -442,5 +442,7 @@ def iou(boxes1: np.ndarray, boxes2: np.ndarray, coords: str = 'centroids',
         raise ValueError("`mode` must be one of 'outer_product' and 'element-wise', but got '{}'.".format(mode))
     
     union_areas = boxes1_areas + boxes2_areas - intersection_areas
+    print(intersection_areas)
+    print(union_areas)
     
     return intersection_areas / union_areas
