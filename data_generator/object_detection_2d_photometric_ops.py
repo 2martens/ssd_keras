@@ -32,13 +32,13 @@ class ConvertColor:
         """
         Arguments:
             current (str, optional): The current color space of the images. Can be
-                one of 'RGB' and 'HSV'.
+                one of 'RGB', 'BGR', and 'HSV'.
             to (str, optional): The target color space of the images. Can be one of
-                'RGB', 'HSV', and 'GRAY'.
+                'RGB', 'BGR', 'HSV', and 'GRAY'.
             keep_3ch (bool, optional): Only relevant if `to == GRAY`.
                 If `True`, the resulting grayscale images will have three channels.
         """
-        if not ((current in {'RGB', 'HSV'}) and (to in {'RGB', 'HSV', 'GRAY'})):
+        if not ((current in {'RGB', 'HSV', 'BGR'}) and (to in {'RGB', 'BGR', 'HSV', 'GRAY'})):
             raise NotImplementedError
         self.current = current
         self.to = to
@@ -58,6 +58,10 @@ class ConvertColor:
             image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
             if self.keep_3ch:
                 image = np.stack([image] * 3, axis=-1)
+        elif self.current == 'RGB' and self.to == 'BGR':
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        elif self.current == 'BGR' and self.to == 'RGB':
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         if labels is None:
             return image
         else:

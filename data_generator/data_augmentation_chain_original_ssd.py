@@ -171,6 +171,8 @@ class SSDPhotometricDistortions:
         
         self.convert_RGB_to_HSV = photometric_ops.ConvertColor(current='RGB', to='HSV')
         self.convert_HSV_to_RGB = photometric_ops.ConvertColor(current='HSV', to='RGB')
+        self.convert_RGB_to_BGR = photometric_ops.ConvertColor(current='RGB', to='BGR')
+        self.convert_BGR_to_RGB = photometric_ops.ConvertColor(current='BGR', to='RGB')
         self.convert_to_float32 = photometric_ops.ConvertDataType(to='float32')
         self.convert_to_uint8 = photometric_ops.ConvertDataType(to='uint8')
         self.convert_to_3_channels = photometric_ops.ConvertTo3Channels()
@@ -191,6 +193,7 @@ class SSDPhotometricDistortions:
                           self.random_hue,
                           self.convert_to_uint8,
                           self.convert_HSV_to_RGB,
+                          self.convert_RGB_to_BGR,
                           self.random_channel_swap]
         
         self.sequence2 = [self.convert_to_3_channels,
@@ -203,6 +206,7 @@ class SSDPhotometricDistortions:
                           self.random_hue,
                           self.convert_to_uint8,
                           self.convert_HSV_to_RGB,
+                          self.convert_RGB_to_BGR,
                           self.convert_to_float32,
                           self.random_contrast,
                           self.convert_to_uint8,
