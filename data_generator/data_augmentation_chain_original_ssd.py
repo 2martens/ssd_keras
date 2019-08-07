@@ -193,7 +193,6 @@ class SSDPhotometricDistortions:
                           self.random_hue,
                           self.convert_to_uint8,
                           self.convert_HSV_to_RGB,
-                          self.convert_RGB_to_BGR,
                           self.random_channel_swap]
         
         self.sequence2 = [self.convert_to_3_channels,
@@ -206,7 +205,6 @@ class SSDPhotometricDistortions:
                           self.random_hue,
                           self.convert_to_uint8,
                           self.convert_HSV_to_RGB,
-                          self.convert_RGB_to_BGR,
                           self.convert_to_float32,
                           self.random_contrast,
                           self.convert_to_uint8,
