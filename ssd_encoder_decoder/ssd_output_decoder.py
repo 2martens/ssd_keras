@@ -134,7 +134,8 @@ def _greedy_nms2(predictions, iou_threshold=0.45, coords='corners', border_pixel
 
 
 def decode_detections(y_pred,
-                      confidence_thresh=0.01,
+                      confidence_thresh=0.5,
+                      entropy_thresh=0,
                       iou_threshold=0.45,
                       top_k=200,
                       input_coords='centroids',
@@ -151,7 +152,7 @@ def decode_detections(y_pred,
     classes are concatenated and the `top_k` overall highest confidence results constitute the final
     predictions for a given batch item. This procedure follows the original Caffe implementation.
     For a slightly different and more efficient alternative to decode raw model output that performs
-    non-maximum suppresion globally instead of per class, see `decode_detections_fast()` below.
+    non-maximum suppression globally instead of per class, see `decode_detections_fast()` below.
 
     Arguments:
         y_pred (array): The prediction output of the SSD model, expected to be a Numpy array
@@ -161,10 +162,10 @@ def decode_detections(y_pred,
         confidence_thresh (float, optional): A float in [0,1), the minimum classification confidence in a specific
             positive class in order to be considered for the non-maximum suppression stage for the respective class.
             A lower value will result in a larger part of the selection process being done by the non-maximum
-            suppression
-            stage, while a larger value will result in a larger part of the selection process happening in the
-            confidence
-            thresholding stage.
+            suppression stage, while a larger value will result in a larger part of the selection process happening in
+            the confidence thresholding stage.
+        entropy_thresh (float, optional): A float describing the upper limit for the entropy across all classes.
+            Predictions with higher entropy will be filtered out.
         iou_threshold (float, optional): A float in [0,1]. All boxes with a Jaccard similarity of greater than
         `iou_threshold`
             with a locally maximal box will be removed from the set of predictions for a given class, where 'maximal'
@@ -186,7 +187,7 @@ def decode_detections(y_pred,
             Can be 'include', 'exclude', or 'half'. If 'include', the border pixels belong
             to the boxes. If 'exclude', the border pixels do not belong to the boxes.
             If 'half', then one of each of the two horizontal and vertical borders belong
-            to the boxex, but not the other.
+            to the boxes, but not the other.
 
     Returns:
         A python list of length `batch_size` where each list element represents the predicted boxes
@@ -202,48 +203,49 @@ def decode_detections(y_pred,
     # 1: Convert the box coordinates from the predicted anchor box offsets to predicted absolute coordinates
     
     y_pred_decoded_raw = np.copy(y_pred[:, :,
-                                 :-8])  # Slice out the classes and the four offsets, throw away the anchor
-    # coordinates and variances, resulting in a tensor of shape `[batch, n_boxes, n_classes + 4 coordinates]`
+                                 :-7])  # Slice out the classes and the four offsets plus one placeholder, throw away
+    # the anchor
+    # coordinates and variances, resulting in a tensor of shape `[batch, n_boxes, n_classes + 5 coordinates]`
     
     if input_coords == 'centroids':
-        y_pred_decoded_raw[:, :, [-2, -1]] = np.exp(y_pred_decoded_raw[:, :, [-2, -1]] * y_pred[:, :, [-2,
+        y_pred_decoded_raw[:, :, [-3, -2]] = np.exp(y_pred_decoded_raw[:, :, [-3, -2]] * y_pred[:, :, [-2,
                                                                                                        -1]])  # exp(
         # ln(w(pred)/w(anchor)) / w_variance * w_variance) == w(pred) / w(anchor), exp(ln(h(pred)/h(anchor)) /
         # h_variance * h_variance) == h(pred) / h(anchor)
-        y_pred_decoded_raw[:, :, [-2, -1]] *= y_pred[:, :, [-6,
+        y_pred_decoded_raw[:, :, [-3, -2]] *= y_pred[:, :, [-6,
                                                             -5]]  # (w(pred) / w(anchor)) * w(anchor) == w(pred),
         # (h(pred) / h(anchor)) * h(anchor) == h(pred)
-        y_pred_decoded_raw[:, :, [-4, -3]] *= y_pred[:, :, [-4, -3]] * y_pred[:, :, [-6,
+        y_pred_decoded_raw[:, :, [-5, -4]] *= y_pred[:, :, [-4, -3]] * y_pred[:, :, [-6,
                                                                                      -5]]  # (delta_cx(pred) / w(
         # anchor) / cx_variance) * cx_variance * w(anchor) == delta_cx(pred), (delta_cy(pred) / h(anchor) /
         # cy_variance) * cy_variance * h(anchor) == delta_cy(pred)
-        y_pred_decoded_raw[:, :, [-4, -3]] += y_pred[:, :, [-8,
+        y_pred_decoded_raw[:, :, [-5, -4]] += y_pred[:, :, [-8,
                                                             -7]]  # delta_cx(pred) + cx(anchor) == cx(pred),
         # delta_cy(pred) + cy(anchor) == cy(pred)
-        y_pred_decoded_raw = bounding_box_utils.convert_coordinates(y_pred_decoded_raw, start_index=-4,
+        y_pred_decoded_raw = bounding_box_utils.convert_coordinates(y_pred_decoded_raw, start_index=-5,
                                                                     conversion='centroids2corners')
     elif input_coords == 'minmax':
-        y_pred_decoded_raw[:, :, -4:] *= y_pred[:, :, -4:]  # delta(pred) / size(anchor) / variance * variance ==
+        y_pred_decoded_raw[:, :, -5:-1] *= y_pred[:, :, -4:]  # delta(pred) / size(anchor) / variance * variance ==
         # delta(pred) / size(anchor) for all four coordinates, where 'size' refers to w or h, respectively
-        y_pred_decoded_raw[:, :, [-4, -3]] *= np.expand_dims(y_pred[:, :, -7] - y_pred[:, :, -8],
+        y_pred_decoded_raw[:, :, [-5, -4]] *= np.expand_dims(y_pred[:, :, -7] - y_pred[:, :, -8],
                                                              axis=-1)  # delta_xmin(pred) / w(anchor) * w(anchor) ==
         # delta_xmin(pred), delta_xmax(pred) / w(anchor) * w(anchor) == delta_xmax(pred)
-        y_pred_decoded_raw[:, :, [-2, -1]] *= np.expand_dims(y_pred[:, :, -5] - y_pred[:, :, -6],
+        y_pred_decoded_raw[:, :, [-3, -2]] *= np.expand_dims(y_pred[:, :, -5] - y_pred[:, :, -6],
                                                              axis=-1)  # delta_ymin(pred) / h(anchor) * h(anchor) ==
         # delta_ymin(pred), delta_ymax(pred) / h(anchor) * h(anchor) == delta_ymax(pred)
-        y_pred_decoded_raw[:, :, -4:] += y_pred[:, :, -8:-4]  # delta(pred) + anchor == pred for all four coordinates
-        y_pred_decoded_raw = bounding_box_utils.convert_coordinates(y_pred_decoded_raw, start_index=-4,
+        y_pred_decoded_raw[:, :, -5:-1] += y_pred[:, :, -8:-4]  # delta(pred) + anchor == pred for all four coordinates
+        y_pred_decoded_raw = bounding_box_utils.convert_coordinates(y_pred_decoded_raw, start_index=-5,
                                                                     conversion='minmax2corners')
     elif input_coords == 'corners':
-        y_pred_decoded_raw[:, :, -4:] *= y_pred[:, :, -4:]  # delta(pred) / size(anchor) / variance * variance ==
+        y_pred_decoded_raw[:, :, -5:-1] *= y_pred[:, :, -4:]  # delta(pred) / size(anchor) / variance * variance ==
         # delta(pred) / size(anchor) for all four coordinates, where 'size' refers to w or h, respectively
-        y_pred_decoded_raw[:, :, [-4, -2]] *= np.expand_dims(y_pred[:, :, -6] - y_pred[:, :, -8],
+        y_pred_decoded_raw[:, :, [-5, -3]] *= np.expand_dims(y_pred[:, :, -6] - y_pred[:, :, -8],
                                                              axis=-1)  # delta_xmin(pred) / w(anchor) * w(anchor) ==
         # delta_xmin(pred), delta_xmax(pred) / w(anchor) * w(anchor) == delta_xmax(pred)
-        y_pred_decoded_raw[:, :, [-3, -1]] *= np.expand_dims(y_pred[:, :, -5] - y_pred[:, :, -7],
+        y_pred_decoded_raw[:, :, [-4, -2]] *= np.expand_dims(y_pred[:, :, -5] - y_pred[:, :, -7],
                                                              axis=-1)  # delta_ymin(pred) / h(anchor) * h(anchor) ==
         # delta_ymin(pred), delta_ymax(pred) / h(anchor) * h(anchor) == delta_ymax(pred)
-        y_pred_decoded_raw[:, :, -4:] += y_pred[:, :, -8:-4]  # delta(pred) + anchor == pred for all four coordinates
+        y_pred_decoded_raw[:, :, -5:-1] += y_pred[:, :, -8:-4]  # delta(pred) + anchor == pred for all four coordinates
     else:
         raise ValueError(
             "Unexpected value for `input_coords`. Supported input coordinate formats are 'minmax', 'corners' and "
@@ -253,20 +255,26 @@ def decode_detections(y_pred,
     # coordinates, do that
     
     if normalize_coords:
-        y_pred_decoded_raw[:, :, [-4, -2]] *= img_width  # Convert xmin, xmax back to absolute coordinates
-        y_pred_decoded_raw[:, :, [-3, -1]] *= img_height  # Convert ymin, ymax back to absolute coordinates
+        y_pred_decoded_raw[:, :, [-5, -3]] *= img_width  # Convert xmin, xmax back to absolute coordinates
+        y_pred_decoded_raw[:, :, [-4, -2]] *= img_height  # Convert ymin, ymax back to absolute coordinates
     
     # 3: Apply confidence thresholding and non-maximum suppression per class
     
     n_classes = y_pred_decoded_raw.shape[
-                    -1] - 4  # The number of classes is the length of the last axis minus the four box coordinates
+                    -1] - 5  # The number of classes is the length of the last axis minus the four box coordinates and
+    # one placeholder
     
     y_pred_decoded = []  # Store the final predictions in this list
-    for batch_item in y_pred_decoded_raw:  # `batch_item` has shape `[n_boxes, n_classes + 4 coords]`
+    for batch_item in y_pred_decoded_raw:  # `batch_item` has shape `[n_boxes, n_classes + 5 coords]`
         pred = []  # Store the final predictions for this batch item here
+        batch_item[:, -1] = -np.sum(batch_item[:, :-5] * np.log(batch_item[:, :-5]), axis=-1)
+        if entropy_thresh:
+            # only continue process if entropy is low enough
+            batch_item = batch_item[batch_item[:, -1] <= entropy_thresh]
+            
         for class_id in range(1, n_classes):  # For each class except the background class (which has class ID 0)...
-            single_class = batch_item[:, [class_id, -4, -3, -2,
-                                          -1]]  # ...keep only the confidences for that class, making this an array
+            single_class = batch_item[:, [class_id, -5, -4, -3,
+                                          -2]]  # ...keep only the confidences for that class, making this an array
             # of shape `[n_boxes, 5]` and...
             threshold_met = single_class[single_class[:,
                                          0] > confidence_thresh]  # ...keep only those boxes with a confidence above
