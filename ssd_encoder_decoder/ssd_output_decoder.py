@@ -22,6 +22,7 @@ limitations under the License.
 
 from __future__ import division
 
+from typing import List
 from typing import Sequence
 
 import numpy as np
@@ -306,16 +307,16 @@ def decode_detections(y_pred,
     return y_pred_decoded
 
 
-def decode_detections_fast(y_pred,
-                           confidence_thresh=0.5,
-                           entropy_thresh=0,
-                           iou_threshold=0.45,
-                           top_k='all',
-                           input_coords='centroids',
-                           normalize_coords=True,
-                           img_height=None,
-                           img_width=None,
-                           border_pixels='half'):
+def decode_detections_fast(y_pred: np.ndarray,
+                           confidence_thresh: float = 0.5,
+                           entropy_thresh: int = 0,
+                           iou_threshold: float = 0.45,
+                           top_k: str = 'all',
+                           input_coords: str = 'centroids',
+                           normalize_coords: bool = True,
+                           img_height: int = None,
+                           img_width: int = None,
+                           border_pixels: str = 'half') -> List[np.ndarray]:
     """
     Convert model prediction output back to a format that contains only the positive box predictions
     (i.e. the same format that `enconde_y()` takes as input).
