@@ -81,10 +81,11 @@ class Resize:
         if return_inverter:
             def inverter(_labels):
                 _labels = np.copy(_labels)
-                _labels[:, [ymin + 2, ymax + 2]] = np.round(
-                    _labels[:, [ymin + 2, ymax + 2]] * (img_height / self.out_height), decimals=0)
-                _labels[:, [xmin + 2, xmax + 2]] = np.round(
-                    _labels[:, [xmin + 2, xmax + 2]] * (img_width / self.out_width), decimals=0)
+                # add one for the prediction probability, +2 if using decode detections fast
+                _labels[:, [ymin + 1, ymax + 1]] = np.round(
+                    _labels[:, [ymin + 1, ymax + 1]] * (img_height / self.out_height), decimals=0)
+                _labels[:, [xmin + 1, xmax + 1]] = np.round(
+                    _labels[:, [xmin + 1, xmax + 1]] * (img_width / self.out_width), decimals=0)
                 
                 return _labels
         
