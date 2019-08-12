@@ -135,7 +135,7 @@ def _greedy_nms2(predictions, iou_threshold=0.45, coords='corners', border_pixel
 
 
 def decode_detections(y_pred,
-                      confidence_thresh=0.5,
+                      confidence_thresh=0.01,
                       entropy_thresh=0,
                       iou_threshold=0.45,
                       top_k=200,
