@@ -268,9 +268,9 @@ def decode_detections(y_pred,
     y_pred_decoded = []  # Store the final predictions in this list
     for batch_item in y_pred_decoded_raw:  # `batch_item` has shape `[n_boxes, n_classes + 5 coords]`
         pred = []  # Store the final predictions for this batch item here
-        batch_item[:, -1] = -np.sum(batch_item[:, :-5] * np.log(batch_item[:, :-5]), axis=-1)
+        batch_item[:, -1] = -np.sum(batch_item[:, :-5] * np.log(batch_item[:, :-5]), axis=-1)  # store entropy
         if entropy_thresh:
-            # only continue process if entropy is low enough
+            # only continue process with detections of low enough entropy
             batch_item = batch_item[batch_item[:, -1] <= entropy_thresh]
             
         for class_id in range(1, n_classes):  # For each class except the background class (which has class ID 0)...
