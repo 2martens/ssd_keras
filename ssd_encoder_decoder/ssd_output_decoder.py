@@ -307,6 +307,127 @@ def decode_detections(y_pred,
     return y_pred_decoded
 
 
+def decode_detections_dropout(y_pred,
+                              confidence_thresh=0.01,
+                              # entropy_thresh=0,
+                              # iou_threshold=0.45,
+                              # top_k=200,
+                              input_coords='centroids',
+                              normalize_coords=True,
+                              img_height=None,
+                              img_width=None,
+                              border_pixels='half'):
+    """
+    Convert model prediction output back to a format that contains only the positive box predictions
+    (i.e. the same format that `SSDInputEncoder` takes as input).
+
+    After the decoding, one stage of prediction filtering is performed:
+    A confidence threshold is applied to the winning class.
+
+    Arguments:
+        y_pred (array): The prediction output of the SSD model, expected to be a Numpy array
+            of shape `(batch_size, #boxes, #classes + 4 + 4 + 4)`, where `#boxes` is the total number of
+            boxes predicted by the model per image and the last axis contains
+            `[one-hot vector for the classes, 4 predicted coordinate offsets, 4 anchor box coordinates, 4 variances]`.
+        confidence_thresh (float, optional): A float in [0,1), the minimum classification confidence for the winning
+            positive class in order to be included in the output.
+        input_coords (str, optional): The box coordinate format that the model outputs. Can be either 'centroids'
+            for the format `(cx, cy, w, h)` (box center coordinates, width, and height), 'minmax' for the format
+            `(xmin, xmax, ymin, ymax)`, or 'corners' for the format `(xmin, ymin, xmax, ymax)`.
+        normalize_coords (bool, optional): Set to `True` if the model outputs relative coordinates (i.e. coordinates
+        in [0,1])
+            and you wish to transform these relative coordinates back to absolute coordinates. If the model outputs
+            relative coordinates, but you do not want to convert them back to absolute coordinates, set this to `False`.
+            Do not set this to `True` if the model already outputs absolute coordinates, as that would result in
+            incorrect coordinates. Requires `img_height` and `img_width` if set to `True`.
+        img_height (int, optional): The height of the input images. Only needed if `normalize_coords` is `True`.
+        img_width (int, optional): The width of the input images. Only needed if `normalize_coords` is `True`.
+        border_pixels (str, optional): How to treat the border pixels of the bounding boxes.
+            Can be 'include', 'exclude', or 'half'. If 'include', the border pixels belong
+            to the boxes. If 'exclude', the border pixels do not belong to the boxes.
+            If 'half', then one of each of the two horizontal and vertical borders belong
+            to the boxes, but not the other.
+
+    Returns:
+        A python list of length `batch_size` where each list element represents the predicted boxes
+        for one image and contains a Numpy array of shape `(boxes, 6)` where each row is a box prediction for
+        a non-background class for the respective image in the format `[class_id, confidence, xmin, ymin, xmax, ymax]`.
+    """
+    if normalize_coords and ((img_height is None) or (img_width is None)):
+        raise ValueError(
+            "If relative box coordinates are supposed to be converted to absolute coordinates, the decoder needs the "
+            "image size in order to decode the predictions, but `img_height == {}` and `img_width == {}`".format(
+                img_height, img_width))
+    
+    # 1: Convert the box coordinates from the predicted anchor box offsets to predicted absolute coordinates
+    
+    y_pred_decoded_raw = np.copy(y_pred[:, :,
+                                 :-7])  # Slice out the classes and the four offsets plus one placeholder, throw away
+    # the anchor
+    # coordinates and variances, resulting in a tensor of shape `[batch, n_boxes, n_classes + 5 coordinates]`
+    
+    if input_coords == 'centroids':
+        y_pred_decoded_raw[:, :, [-3, -2]] = np.exp(y_pred_decoded_raw[:, :, [-3, -2]] * y_pred[:, :, [-2,
+                                                                                                       -1]])  # exp(
+        # ln(w(pred)/w(anchor)) / w_variance * w_variance) == w(pred) / w(anchor), exp(ln(h(pred)/h(anchor)) /
+        # h_variance * h_variance) == h(pred) / h(anchor)
+        y_pred_decoded_raw[:, :, [-3, -2]] *= y_pred[:, :, [-6,
+                                                            -5]]  # (w(pred) / w(anchor)) * w(anchor) == w(pred),
+        # (h(pred) / h(anchor)) * h(anchor) == h(pred)
+        y_pred_decoded_raw[:, :, [-5, -4]] *= y_pred[:, :, [-4, -3]] * y_pred[:, :, [-6,
+                                                                                     -5]]  # (delta_cx(pred) / w(
+        # anchor) / cx_variance) * cx_variance * w(anchor) == delta_cx(pred), (delta_cy(pred) / h(anchor) /
+        # cy_variance) * cy_variance * h(anchor) == delta_cy(pred)
+        y_pred_decoded_raw[:, :, [-5, -4]] += y_pred[:, :, [-8,
+                                                            -7]]  # delta_cx(pred) + cx(anchor) == cx(pred),
+        # delta_cy(pred) + cy(anchor) == cy(pred)
+        y_pred_decoded_raw = bounding_box_utils.convert_coordinates(y_pred_decoded_raw, start_index=-5,
+                                                                    conversion='centroids2corners')
+    elif input_coords == 'minmax':
+        y_pred_decoded_raw[:, :, -5:-1] *= y_pred[:, :, -4:]  # delta(pred) / size(anchor) / variance * variance ==
+        # delta(pred) / size(anchor) for all four coordinates, where 'size' refers to w or h, respectively
+        y_pred_decoded_raw[:, :, [-5, -4]] *= np.expand_dims(y_pred[:, :, -7] - y_pred[:, :, -8],
+                                                             axis=-1)  # delta_xmin(pred) / w(anchor) * w(anchor) ==
+        # delta_xmin(pred), delta_xmax(pred) / w(anchor) * w(anchor) == delta_xmax(pred)
+        y_pred_decoded_raw[:, :, [-3, -2]] *= np.expand_dims(y_pred[:, :, -5] - y_pred[:, :, -6],
+                                                             axis=-1)  # delta_ymin(pred) / h(anchor) * h(anchor) ==
+        # delta_ymin(pred), delta_ymax(pred) / h(anchor) * h(anchor) == delta_ymax(pred)
+        y_pred_decoded_raw[:, :, -5:-1] += y_pred[:, :, -8:-4]  # delta(pred) + anchor == pred for all four coordinates
+        y_pred_decoded_raw = bounding_box_utils.convert_coordinates(y_pred_decoded_raw, start_index=-5,
+                                                                    conversion='minmax2corners')
+    elif input_coords == 'corners':
+        y_pred_decoded_raw[:, :, -5:-1] *= y_pred[:, :, -4:]  # delta(pred) / size(anchor) / variance * variance ==
+        # delta(pred) / size(anchor) for all four coordinates, where 'size' refers to w or h, respectively
+        y_pred_decoded_raw[:, :, [-5, -3]] *= np.expand_dims(y_pred[:, :, -6] - y_pred[:, :, -8],
+                                                             axis=-1)  # delta_xmin(pred) / w(anchor) * w(anchor) ==
+        # delta_xmin(pred), delta_xmax(pred) / w(anchor) * w(anchor) == delta_xmax(pred)
+        y_pred_decoded_raw[:, :, [-4, -2]] *= np.expand_dims(y_pred[:, :, -5] - y_pred[:, :, -7],
+                                                             axis=-1)  # delta_ymin(pred) / h(anchor) * h(anchor) ==
+        # delta_ymin(pred), delta_ymax(pred) / h(anchor) * h(anchor) == delta_ymax(pred)
+        y_pred_decoded_raw[:, :, -5:-1] += y_pred[:, :, -8:-4]  # delta(pred) + anchor == pred for all four coordinates
+    else:
+        raise ValueError(
+            "Unexpected value for `input_coords`. Supported input coordinate formats are 'minmax', 'corners' and "
+            "'centroids'.")
+    
+    # 2: If the model predicts normalized box coordinates and they are supposed to be converted back to absolute
+    # coordinates, do that
+    
+    if normalize_coords:
+        y_pred_decoded_raw[:, :, [-5, -3]] *= img_width  # Convert xmin, xmax back to absolute coordinates
+        y_pred_decoded_raw[:, :, [-4, -2]] *= img_height  # Convert ymin, ymax back to absolute coordinates
+    
+    # 3: Apply confidence threshold
+    y_pred_decoded = []  # Store the final predictions in this list
+    for batch_item in y_pred_decoded_raw:  # `batch_item` has shape `[n_boxes, n_classes + 5 coords]`
+        pred = y_pred_decoded_raw[batch_item,
+                                  np.any(y_pred_decoded_raw[batch_item, :, -5] >= confidence_thresh, axis=-1)]
+        
+        y_pred_decoded.append(pred)
+    
+    return y_pred_decoded
+
+
 def decode_detections_fast(y_pred: np.ndarray,
                            confidence_thresh: float = 0.5,
                            entropy_thresh: int = 0,
