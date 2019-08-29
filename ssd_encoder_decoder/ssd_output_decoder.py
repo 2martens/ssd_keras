@@ -419,9 +419,9 @@ def decode_detections_dropout(y_pred,
     
     # 3: Apply confidence threshold
     y_pred_decoded = []  # Store the final predictions in this list
-    for batch_item in y_pred_decoded_raw:  # `batch_item` has shape `[n_boxes, n_classes + 5 coords]`
-        pred = y_pred_decoded_raw[batch_item,
-                                  np.any(y_pred_decoded_raw[batch_item, :, -5] >= confidence_thresh, axis=-1)]
+    for i in range(y_pred_decoded_raw.shape[0]):  # `batch_item` has shape `[n_boxes, n_classes + 5 coords]`
+        pred = y_pred_decoded_raw[i,
+                                  np.any(y_pred_decoded_raw[i, :, -5] >= confidence_thresh, axis=-1)]
         
         y_pred_decoded.append(pred)
     
