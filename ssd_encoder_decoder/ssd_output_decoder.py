@@ -422,8 +422,7 @@ def decode_detections_dropout(y_pred,
     for i in range(y_pred_decoded_raw.shape[0]):  # `batch_item` has shape `[n_boxes, n_classes + 5 coords]`
         pred = y_pred_decoded_raw[i,
                                   np.any(y_pred_decoded_raw[i, :, :-5] >= confidence_thresh, axis=-1)]
-        indices = np.nonzero(np.argmax(pred[:, :-5], axis=-1))
-        pred = pred[indices]
+        pred = pred[pred[:, 0] < (1 - confidence_thresh)]
         y_pred_decoded.append(pred)
     
     return y_pred_decoded
