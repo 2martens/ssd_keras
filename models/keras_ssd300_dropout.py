@@ -63,9 +63,10 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
                     iou_threshold: Optional[float] = 0.45,
                     top_k: Optional[int] = 200,
                     nms_max_output_size: Optional[int] = 400,
-                    return_predictor_sizes: Optional[bool] = False) -> Union[tf.keras.models.Model,
-                                                                             Tuple[tf.keras.models.Model,
-                                                                             np.ndarray]]:
+                    return_predictor_sizes: Optional[bool] = False,
+                    use_dropout: Optional[bool] = True) -> Union[tf.keras.models.Model,
+                                                                 Tuple[tf.keras.models.Model,
+                                                                 np.ndarray]]:
     """
     Build a Keras model with SSD300 architecture, see references.
 
@@ -182,6 +183,7 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
             you can always get their sizes easily via the Keras API, but it's convenient and less error-prone
             to get them this way. They are only relevant for training anyway (SSDBoxEncoder needs to know the
             spatial dimensions of the predictor layers), for inference you don't need them.
+        use_dropout (bool, optional)> If `True`, the dropout layers will be activated.
 
     Returns:
         model: The Keras SSD300 model.
@@ -365,7 +367,7 @@ def ssd_300_dropout(image_size: Tuple[int, int, int],
                                  kernel_initializer='he_normal', kernel_regularizer=tf.keras.regularizers.l2(l2_reg),
                                  name='fc6')(pool5)
     # make Keras believe we are always in training mode
-    training_mode = True
+    training_mode = use_dropout
     dropout_1 = tf.keras.layers.Dropout(rate=dropout_rate)(fc6, training=training_mode)
     
     fc7 = tf.keras.layers.Conv2D(1024, (1, 1), activation='relu', padding='same', kernel_initializer='he_normal',
